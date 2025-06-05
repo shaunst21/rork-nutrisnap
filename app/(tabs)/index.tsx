@@ -5,11 +5,13 @@ import { Camera, Plus, TrendingUp, Award, Target } from 'lucide-react-native';
 import { useMealStore } from '@/store/mealStore';
 import { useStatsStore } from '@/store/statsStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
+import { useSubscriptionStore } from '@/store/subscriptionStore';
 import MealCard from '@/components/MealCard';
 import StatCard from '@/components/StatCard';
 import EmptyState from '@/components/EmptyState';
 import CalorieGoalProgress from '@/components/CalorieGoalProgress';
 import MacrosCard from '@/components/MacrosCard';
+import SubscriptionBanner from '@/components/SubscriptionBanner';
 import { checkAndUpdateStreak } from '@/utils/streakHelpers';
 import { formatDate } from '@/utils/dateHelpers';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -28,6 +30,10 @@ export default function HomeScreen() {
     fetchStats 
   } = useStatsStore();
   const { preferences } = usePreferencesStore();
+  const { getSubscriptionTier } = useSubscriptionStore();
+  
+  const currentTier = getSubscriptionTier();
+  const showPremiumBanner = currentTier === 'free';
   
   // Get today's meals
   const todayMeals = meals.filter(meal => {
@@ -77,6 +83,9 @@ export default function HomeScreen() {
         <Text style={[styles.greeting, { color: Colors.text }]}>Hello!</Text>
         <Text style={[styles.subtitle, { color: Colors.subtext }]}>Track your nutrition today</Text>
       </View>
+      
+      {/* Premium Banner */}
+      {showPremiumBanner && <SubscriptionBanner />}
       
       {/* Calorie Goal Progress */}
       <CalorieGoalProgress 

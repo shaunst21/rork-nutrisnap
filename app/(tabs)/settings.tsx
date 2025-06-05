@@ -19,17 +19,31 @@ import {
   RefreshCw,
   Shield,
   HelpCircle,
-  Dumbbell
+  Dumbbell,
+  Crown,
+  CreditCard,
+  LogOut
 } from 'lucide-react-native';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import { useThemeStore } from '@/store/themeStore';
+import { useSubscriptionStore } from '@/store/subscriptionStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useRouter } from 'expo-router';
 
 export default function SettingsScreen() {
   const Colors = useThemeColors();
+  const router = useRouter();
   const { preferences, updatePreferences, updateMacroGoals } = usePreferencesStore();
   const { theme, toggleTheme } = useThemeStore();
+  const { 
+    subscription, 
+    cancelSubscription, 
+    updateAutoRenew, 
+    isSubscriptionActive, 
+    getSubscriptionTier,
+    getRemainingDays
+  } = useSubscriptionStore();
   
   const [dailyGoal, setDailyGoal] = useState(preferences.dailyCalorieGoal.toString());
   const [weeklyGoal, setWeeklyGoal] = useState(preferences.weeklyCalorieGoal.toString());
@@ -38,6 +52,10 @@ export default function SettingsScreen() {
   const [proteinGoal, setProteinGoal] = useState(preferences.macroGoals.protein.toString());
   const [carbsGoal, setCarbsGoal] = useState(preferences.macroGoals.carbs.toString());
   const [fatGoal, setFatGoal] = useState(preferences.macroGoals.fat.toString());
+  
+  const currentTier = getSubscriptionTier();
+  const isActive = isSubscriptionActive();
+  const remainingDays = getRemainingDays();
   
   const handleSaveGoals = () => {
     const dailyGoalNum = parseInt(dailyGoal, 10);
@@ -103,6 +121,36 @@ export default function SettingsScreen() {
     });
   };
   
+  const handleToggleAutoRenew = () => {
+    if (!subscription) return;
+    
+    updateAutoRenew(!subscription.autoRenew);
+  };
+  
+  const handleCancelSubscription = () => {
+    Alert.alert(
+      'Cancel Subscription',
+      'Are you sure you want to cancel your subscription? You will still have access until the end of your current billing period.',
+      [
+        {
+          text: 'No, Keep It',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: () => {
+            cancelSubscription();
+            Alert.alert(
+              'Subscription Canceled',
+              'Your subscription has been canceled. You will still have access until the end of your current billing period.'
+            );
+          },
+        },
+      ]
+    );
+  };
+  
   const clearAllData = () => {
     Alert.alert(
       'Clear All Data',
@@ -135,6 +183,67 @@ export default function SettingsScreen() {
   
   return (
     <ScrollView style={[styles.container, { backgroundColor: Colors.background }]}>
+      {/* Subscription Section */}
+      {currentTier !== 'free' && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Your Subscription</Text>
+          
+          <View style={[styles.subscriptionCard, { backgroundColor: Colors.card }]}>
+            <View style={styles.subscriptionHeader}>
+              <Crown size={24} color={Colors.accent} />
+              <Text style={[styles.subscriptionTitle, { color: Colors.text }]}>
+                {currentTier === 'premium' ? 'Premium' : 'Premium Plus'}
+              </Text>
+            </View>
+            
+            <View style={styles.subscriptionDetails}>
+              <Text style={[styles.subscriptionStatus, { color: Colors.text }]}>
+                Status: {isActive ? 'Active' : 'Inactive'}
+              </Text>
+              
+              {remainingDays > 0 && (
+                <Text style={[styles.subscriptionDays, { color: Colors.text }]}>
+                  {remainingDays} days remaining
+                </Text>
+              )}
+              
+              <View style={styles.subscriptionToggle}>
+                <Text style={[styles.autoRenewText, { color: Colors.text }]}>Auto-renew</Text>
+                <Switch
+                  value={subscription?.autoRenew || false}
+                  onValueChange={handleToggleAutoRenew}
+                  trackColor={{ false: Colors.lightGray, true: Colors.primary }}
+                  thumbColor={Platform.OS === 'ios' ? undefined : '#FFFFFF'}
+                />
+              </View>
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.cancelButton, { borderColor: Colors.error }]}
+              onPress={handleCancelSubscription}
+            >
+              <Text style={[styles.cancelButtonText, { color: Colors.error }]}>
+                Cancel Subscription
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+      
+      {currentTier === 'free' && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Subscription</Text>
+          
+          <TouchableOpacity 
+            style={[styles.premiumButton, { backgroundColor: Colors.primary }]}
+            onPress={() => router.push('/premium')}
+          >
+            <Crown size={20} color="#FFFFFF" />
+            <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: Colors.text }]}>Calorie Goals</Text>
         
@@ -305,6 +414,20 @@ export default function SettingsScreen() {
       </View>
       
       <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Account</Text>
+        
+        <TouchableOpacity style={[styles.accountButton, { borderBottomColor: Colors.border }]}>
+          <CreditCard size={20} color={Colors.primary} />
+          <Text style={[styles.accountButtonText, { color: Colors.text }]}>Payment Methods</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity style={[styles.accountButton, { borderBottomColor: Colors.border }]}>
+          <LogOut size={20} color={Colors.primary} />
+          <Text style={[styles.accountButtonText, { color: Colors.text }]}>Sign Out</Text>
+        </TouchableOpacity>
+      </View>
+      
+      <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: Colors.text }]}>Data Management</Text>
         
         <TouchableOpacity 
@@ -434,5 +557,72 @@ const styles = StyleSheet.create({
   },
   versionText: {
     fontSize: 16,
+  },
+  subscriptionCard: {
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  subscriptionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  subscriptionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+  subscriptionDetails: {
+    marginBottom: 16,
+  },
+  subscriptionStatus: {
+    fontSize: 16,
+    marginBottom: 4,
+  },
+  subscriptionDays: {
+    fontSize: 16,
+    marginBottom: 12,
+  },
+  subscriptionToggle: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  autoRenewText: {
+    fontSize: 16,
+  },
+  cancelButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  premiumButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 8,
+    padding: 12,
+  },
+  premiumButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
+    marginLeft: 8,
+  },
+  accountButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  accountButtonText: {
+    fontSize: 16,
+    marginLeft: 12,
   },
 });
