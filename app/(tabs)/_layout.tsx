@@ -1,32 +1,14 @@
-import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
-import { 
-  Home, 
-  BarChart2, 
-  Calendar, 
-  Camera,
-  Settings
-} from 'lucide-react-native';
-import { useMealStore } from '@/store/mealStore';
-import { useStatsStore } from '@/store/statsStore';
+import { useColorScheme } from 'react-native';
+import { Home, BarChart2, History, Camera, Settings, Crown } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useThemeStore } from '@/store/themeStore';
 
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
+  const { theme } = useThemeStore();
   const Colors = useThemeColors();
-  const { fetchMeals, syncOfflineMeals } = useMealStore();
-  const { fetchStats } = useStatsStore();
-  
-  // Load data when the app starts
-  useEffect(() => {
-    const loadInitialData = async () => {
-      await fetchMeals();
-      await fetchStats();
-      await syncOfflineMeals();
-    };
-    
-    loadInitialData();
-  }, []);
-  
+
   return (
     <Tabs
       screenOptions={{
@@ -50,6 +32,20 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="history"
+        options={{
+          title: 'History',
+          tabBarIcon: ({ color }) => <History size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="scan-tab"
+        options={{
+          title: 'Scan',
+          tabBarIcon: ({ color }) => <Camera size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="stats"
         options={{
           title: 'Stats',
@@ -57,17 +53,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="history"
+        name="premium"
         options={{
-          title: 'History',
-          tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="scan"
-        options={{
-          title: 'Scan',
-          tabBarIcon: ({ color }) => <Camera size={24} color={color} />,
+          title: 'Premium',
+          tabBarIcon: ({ color }) => <Crown size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -75,6 +64,20 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="recipes"
+        options={{
+          title: 'Recipes',
+          href: null, // Hide this tab from the tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="meal-plans"
+        options={{
+          title: 'Meal Plans',
+          href: null, // Hide this tab from the tab bar
         }}
       />
     </Tabs>

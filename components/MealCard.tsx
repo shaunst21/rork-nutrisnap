@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { Camera, Clock, Trash2, Coffee, Sun, Moon, Cookie, Sparkles } from 'lucide-react-native';
+import { Camera, Clock, Trash2, Coffee, Sun, Moon, Cookie } from 'lucide-react-native';
 import { deleteMeal } from '@/firebase';
+import { Meal } from '@/types';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface MealCardProps {
@@ -9,7 +10,7 @@ interface MealCardProps {
   food: string;
   calories: number;
   date: string;
-  method: 'scan' | 'manual' | 'api';
+  method: 'scan' | 'manual';
   mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   notes?: string;
   onDelete?: () => void;
@@ -61,7 +62,7 @@ const MealCard = ({
     if (!mealType) return null;
     
     const iconSize = 16;
-    const iconColor = Colors.mealTypes?.[mealType] || Colors.primary;
+    const iconColor = Colors.mealTypes[mealType];
     
     switch (mealType) {
       case 'breakfast':
@@ -74,37 +75,6 @@ const MealCard = ({
         return <Cookie size={iconSize} color={iconColor} />;
       default:
         return null;
-    }
-  };
-  
-  // Get method icon
-  const getMethodIcon = () => {
-    const iconSize = 16;
-    const iconColor = Colors.primary;
-    
-    switch (method) {
-      case 'scan':
-        return <Camera size={iconSize} color={iconColor} />;
-      case 'manual':
-        return <Text style={[styles.manualIcon, { color: iconColor }]}>M</Text>;
-      case 'api':
-        return <Sparkles size={iconSize} color={iconColor} />;
-      default:
-        return null;
-    }
-  };
-  
-  // Get method text
-  const getMethodText = () => {
-    switch (method) {
-      case 'scan':
-        return 'Scanned';
-      case 'manual':
-        return 'Manual';
-      case 'api':
-        return 'AI Generated';
-      default:
-        return '';
     }
   };
   
@@ -123,16 +93,20 @@ const MealCard = ({
       
       <View style={styles.footer}>
         <View style={styles.methodContainer}>
-          {getMethodIcon()}
+          {method === 'scan' ? (
+            <Camera size={16} color={Colors.primary} />
+          ) : (
+            <Text style={[styles.manualIcon, { color: Colors.primary }]}>M</Text>
+          )}
           <Text style={[styles.methodText, { color: Colors.subtext }]}>
-            {getMethodText()}
+            {method === 'scan' ? 'Scanned' : 'Manual'}
           </Text>
         </View>
         
         {mealType && (
           <View style={styles.mealTypeContainer}>
             {getMealTypeIcon()}
-            <Text style={[styles.mealTypeText, { color: Colors.mealTypes?.[mealType] || Colors.primary }]}>
+            <Text style={[styles.mealTypeText, { color: Colors.mealTypes[mealType] }]}>
               {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
             </Text>
           </View>
