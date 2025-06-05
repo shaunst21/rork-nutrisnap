@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Camera, X, Image as ImageIcon } from 'lucide-react-native';
 import { useMealStore } from '@/store/mealStore';
+import { useStatsStore } from '@/store/statsStore';
 import FoodConfirmation from '@/components/FoodConfirmation';
 import { processImage } from '@/utils/imageProcessing';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -35,6 +36,7 @@ export default function ScanScreen() {
   
   const cameraRef = useRef<any>(null);
   const { addMeal } = useMealStore();
+  const { fetchStats } = useStatsStore();
   
   // Check if permission was previously requested
   useEffect(() => {
@@ -58,6 +60,20 @@ export default function ScanScreen() {
       handleRequestPermission();
     }
   }, [permission, permissionRequested]);
+  
+  // Reset permission state when screen is focused
+  useEffect(() => {
+    // This will ensure the permission dialog shows up again if needed
+    if (!permission?.granted) {
+      setPermissionRequested(false);
+    }
+    
+    return () => {
+      // Clean up any resources when component unmounts
+      setCapturedImage(null);
+      setDetectedFood(null);
+    };
+  }, []);
   
   const handleRequestPermission = async () => {
     try {
@@ -125,6 +141,9 @@ export default function ScanScreen() {
         image: capturedImage || undefined,
         macros
       });
+      
+      // Update stats after adding a meal
+      await fetchStats();
       
       router.back();
     } catch (error) {

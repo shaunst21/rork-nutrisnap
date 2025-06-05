@@ -1,96 +1,74 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
-import { StatusBar } from "expo-status-bar";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { trpc, trpcClient } from "@/lib/trpc";
-import ThemeProvider from "@/components/ThemeProvider";
-import { useThemeStore } from "@/store/themeStore";
-import { useThemeColors } from "@/hooks/useThemeColors";
-
-export const unstable_settings = {
-  initialRouteName: "(tabs)",
-};
-
-// Create a client
-const queryClient = new QueryClient();
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+import React, { useEffect } from 'react';
+import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
+import ThemeProvider from '@/components/ThemeProvider';
+import { useThemeStore } from '@/store/themeStore';
+import { useColorScheme } from 'react-native';
+import { useStatsStore } from '@/store/statsStore';
+import { useMealStore } from '@/store/mealStore';
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({
-    ...FontAwesome.font,
-  });
-
+  const { theme, isSystemTheme } = useThemeStore();
+  const systemColorScheme = useColorScheme();
+  const { fetchStats } = useStatsStore();
+  const { fetchMeals } = useMealStore();
+  
+  // Determine the active theme
+  const activeTheme = isSystemTheme 
+    ? (systemColorScheme === 'dark' ? 'dark' : 'light')
+    : theme;
+  
+  // Initialize data on app start
   useEffect(() => {
-    if (error) {
-      console.error(error);
-      throw error;
-    }
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
-  return <RootLayoutNav />;
-}
-
-function RootLayoutNav() {
-  const { getActiveTheme } = useThemeStore();
-  const activeTheme = getActiveTheme();
-  const Colors = useThemeColors();
+    const initializeData = async () => {
+      await fetchMeals();
+      await fetchStats();
+    };
+    
+    initializeData();
+  }, []);
   
   return (
-    <>
-      <StatusBar style={activeTheme === 'dark' ? "light" : "dark"} />
-      <ThemeProvider>
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <Stack
-              screenOptions={{
-                headerStyle: {
-                  backgroundColor: Colors.background,
-                },
-                headerTintColor: Colors.text,
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                },
-                contentStyle: {
-                  backgroundColor: Colors.background,
-                },
-              }}
-            >
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen 
-                name="scan" 
-                options={{ 
-                  title: "Scan Food",
-                  presentation: "modal",
-                  headerTitleAlign: "center",
-                }} 
-              />
-              <Stack.Screen 
-                name="manual-entry" 
-                options={{ 
-                  title: "Add Food",
-                  presentation: "modal",
-                  headerTitleAlign: "center",
-                }} 
-              />
-            </Stack>
-          </QueryClientProvider>
-        </trpc.Provider>
-      </ThemeProvider>
-    </>
+    <ThemeProvider>
+      <StatusBar style={activeTheme === 'dark' ? 'light' : 'dark'} />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen 
+          name="scan" 
+          options={{ 
+            headerShown: false,
+            presentation: 'modal'
+          }} 
+        />
+        <Stack.Screen 
+          name="manual-entry" 
+          options={{ 
+            headerShown: false,
+            presentation: 'modal'
+          }} 
+        />
+        <Stack.Screen 
+          name="export-data" 
+          options={{ 
+            title: 'Export Data',
+            presentation: 'modal'
+          }} 
+        />
+        <Stack.Screen 
+          name="ai-coach" 
+          options={{ 
+            title: 'AI Nutrition Coach',
+            presentation: 'modal'
+          }} 
+        />
+        <Stack.Screen 
+          name="family-plan" 
+          options={{ 
+            title: 'Family Plan',
+            presentation: 'modal'
+          }} 
+        />
+      </Stack>
+    </ThemeProvider>
   );
 }

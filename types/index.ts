@@ -30,6 +30,16 @@ export interface User {
   isPremium: boolean;
 }
 
+export interface Stats {
+  todayCalories: number;
+  weekCalories: number;
+  monthCalories: number;
+  averageDailyCalories: number;
+  commonFoods: Array<{food: string, count: number}>;
+  currentStreak: number;
+  longestStreak: number;
+}
+
 export interface DailyStats {
   date: string;
   totalCalories: number;

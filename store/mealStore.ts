@@ -9,6 +9,7 @@ import {
 } from '@/firebase';
 import { updateStreak } from '@/utils/streakHelpers';
 import { Meal } from '@/types';
+import { useStatsStore } from './statsStore';
 
 interface MealState {
   meals: Meal[];
@@ -31,6 +32,12 @@ export const useMealStore = create<MealState>()(
         try {
           const meals = await getMeals();
           set({ meals, isLoading: false });
+          
+          // Update stats after fetching meals
+          const statsStore = useStatsStore.getState();
+          if (statsStore.fetchStats) {
+            await statsStore.fetchStats();
+          }
         } catch (error) {
           console.error('Error fetching meals:', error);
           set({ error: 'Failed to fetch meals', isLoading: false });
@@ -75,6 +82,12 @@ export const useMealStore = create<MealState>()(
           
           // Update streak
           await updateStreak();
+          
+          // Update stats after adding a meal
+          const statsStore = useStatsStore.getState();
+          if (statsStore.fetchStats) {
+            await statsStore.fetchStats();
+          }
         } catch (error) {
           console.error('Error adding meal:', error);
           set({ error: 'Failed to add meal', isLoading: false });
@@ -90,6 +103,12 @@ export const useMealStore = create<MealState>()(
         try {
           await syncOfflineData();
           await get().fetchMeals();
+          
+          // Update stats after syncing
+          const statsStore = useStatsStore.getState();
+          if (statsStore.fetchStats) {
+            await statsStore.fetchStats();
+          }
         } catch (error) {
           console.error('Error syncing offline meals:', error);
           set({ error: 'Failed to sync offline meals', isLoading: false });
