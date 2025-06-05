@@ -7,9 +7,10 @@ import {
   TouchableOpacity, 
   TouchableWithoutFeedback 
 } from 'react-native';
-import { Lock, X, Crown } from 'lucide-react-native';
+import { Lock, X, Crown, Gift } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useRouter } from 'expo-router';
+import { useSubscriptionStore } from '@/store/subscriptionStore';
 
 interface PremiumFeatureModalProps {
   visible: boolean;
@@ -26,6 +27,9 @@ const PremiumFeatureModal = ({
 }: PremiumFeatureModalProps) => {
   const Colors = useThemeColors();
   const router = useRouter();
+  const { isTrialAvailable } = useSubscriptionStore();
+  
+  const canTrial = isTrialAvailable();
   
   const handleViewPlans = () => {
     onClose();
@@ -47,13 +51,13 @@ const PremiumFeatureModal = ({
               </TouchableOpacity>
               
               <View style={styles.content}>
-                <View style={[styles.iconContainer, { backgroundColor: Colors.primary }]}>
+                <View style={[styles.iconContainer, { backgroundColor: canTrial ? Colors.secondary : Colors.primary }]}>
                   <Lock size={32} color="#FFFFFF" />
                 </View>
                 
                 <Text style={[styles.title, { color: Colors.text }]}>Premium Feature</Text>
                 
-                <Text style={[styles.featureName, { color: Colors.primary }]}>
+                <Text style={[styles.featureName, { color: canTrial ? Colors.secondary : Colors.primary }]}>
                   {featureName}
                 </Text>
                 
@@ -62,11 +66,20 @@ const PremiumFeatureModal = ({
                 </Text>
                 
                 <TouchableOpacity 
-                  style={[styles.upgradeButton, { backgroundColor: Colors.primary }]}
+                  style={[styles.upgradeButton, { backgroundColor: canTrial ? Colors.secondary : Colors.primary }]}
                   onPress={handleViewPlans}
                 >
-                  <Crown size={20} color="#FFFFFF" />
-                  <Text style={styles.upgradeButtonText}>View Premium Plans</Text>
+                  {canTrial ? (
+                    <>
+                      <Gift size={20} color="#FFFFFF" />
+                      <Text style={styles.upgradeButtonText}>Start 7-Day Free Trial</Text>
+                    </>
+                  ) : (
+                    <>
+                      <Crown size={20} color="#FFFFFF" />
+                      <Text style={styles.upgradeButtonText}>View Premium Plans</Text>
+                    </>
+                  )}
                 </TouchableOpacity>
                 
                 <TouchableOpacity onPress={onClose}>

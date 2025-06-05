@@ -5,7 +5,6 @@ import { useStatsStore } from '@/store/statsStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import StatCard from '@/components/StatCard';
 import WeeklyCalorieChart from '@/components/WeeklyCalorieChart';
-import MacrosCard from '@/components/MacrosCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function StatsScreen() {
@@ -18,7 +17,6 @@ export default function StatsScreen() {
     averageDailyCalories,
     weeklyCalorieData,
     mealTypeCalories,
-    macros,
     commonFoods,
     currentStreak,
     longestStreak,
@@ -67,21 +65,6 @@ export default function StatsScreen() {
         data={weeklyCalorieData} 
         goal={preferences.dailyCalorieGoal}
       />
-      
-      {/* Macros Cards */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Macros</Text>
-        
-        <MacrosCard 
-          macros={macros.today}
-          title="Today's Macros"
-        />
-        
-        <MacrosCard 
-          macros={macros.week}
-          title="Weekly Macros"
-        />
-      </View>
       
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: Colors.text }]}>Calories</Text>
