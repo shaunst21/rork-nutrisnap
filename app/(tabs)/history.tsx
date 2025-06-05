@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { Calendar, Filter } from 'lucide-react-native';
-import Colors from '@/constants/colors';
 import { useMealStore } from '@/store/mealStore';
 import MealCard from '@/components/MealCard';
 import EmptyState from '@/components/EmptyState';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function HistoryScreen() {
   const { meals, fetchMeals, isLoading } = useMealStore();
   const [refreshing, setRefreshing] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'scan' | 'manual'>('all');
+  const Colors = useThemeColors();
   
   useEffect(() => {
     fetchMeals();
@@ -71,28 +72,30 @@ export default function HistoryScreen() {
     }
     
     return (
-      <View style={styles.dateHeader}>
+      <View style={[styles.dateHeader, { backgroundColor: Colors.card }]}>
         <Calendar size={16} color={Colors.primary} />
-        <Text style={styles.dateText}>{displayDate}</Text>
+        <Text style={[styles.dateText, { color: Colors.text }]}>{displayDate}</Text>
       </View>
     );
   };
   
   return (
-    <View style={styles.container}>
-      <View style={styles.filterContainer}>
-        <Text style={styles.filterLabel}>Filter:</Text>
+    <View style={[styles.container, { backgroundColor: Colors.background }]}>
+      <View style={[styles.filterContainer, { borderBottomColor: Colors.border }]}>
+        <Text style={[styles.filterLabel, { color: Colors.subtext }]}>Filter:</Text>
         <View style={styles.filterButtons}>
           <TouchableOpacity
             style={[
               styles.filterButton,
-              filterType === 'all' && styles.activeFilterButton,
+              { backgroundColor: Colors.card },
+              filterType === 'all' && [styles.activeFilterButton, { backgroundColor: Colors.primary }],
             ]}
             onPress={() => setFilterType('all')}
           >
             <Text
               style={[
                 styles.filterButtonText,
+                { color: Colors.text },
                 filterType === 'all' && styles.activeFilterText,
               ]}
             >
@@ -103,13 +106,15 @@ export default function HistoryScreen() {
           <TouchableOpacity
             style={[
               styles.filterButton,
-              filterType === 'scan' && styles.activeFilterButton,
+              { backgroundColor: Colors.card },
+              filterType === 'scan' && [styles.activeFilterButton, { backgroundColor: Colors.primary }],
             ]}
             onPress={() => setFilterType('scan')}
           >
             <Text
               style={[
                 styles.filterButtonText,
+                { color: Colors.text },
                 filterType === 'scan' && styles.activeFilterText,
               ]}
             >
@@ -120,13 +125,15 @@ export default function HistoryScreen() {
           <TouchableOpacity
             style={[
               styles.filterButton,
-              filterType === 'manual' && styles.activeFilterButton,
+              { backgroundColor: Colors.card },
+              filterType === 'manual' && [styles.activeFilterButton, { backgroundColor: Colors.primary }],
             ]}
             onPress={() => setFilterType('manual')}
           >
             <Text
               style={[
                 styles.filterButtonText,
+                { color: Colors.text },
                 filterType === 'manual' && styles.activeFilterText,
               ]}
             >
@@ -162,7 +169,12 @@ export default function HistoryScreen() {
             </View>
           )}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh}
+              tintColor={Colors.primary}
+              colors={[Colors.primary]}
+            />
           }
           contentContainerStyle={styles.listContent}
         />
@@ -174,16 +186,13 @@ export default function HistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   filterContainer: {
     padding: 16,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   filterLabel: {
     fontSize: 14,
-    color: Colors.subtext,
     marginBottom: 8,
   },
   filterButtons: {
@@ -194,14 +203,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 16,
     marginRight: 8,
-    backgroundColor: Colors.card,
   },
   activeFilterButton: {
-    backgroundColor: Colors.primary,
+    // backgroundColor is applied dynamically
   },
   filterButtonText: {
     fontSize: 14,
-    color: Colors.text,
+    // color is applied dynamically
   },
   activeFilterText: {
     color: '#FFFFFF',
@@ -212,7 +220,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: Colors.card,
     marginTop: 16,
     marginHorizontal: 16,
     borderRadius: 8,
@@ -220,7 +227,6 @@ const styles = StyleSheet.create({
   dateText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
     marginLeft: 8,
   },
   listContent: {

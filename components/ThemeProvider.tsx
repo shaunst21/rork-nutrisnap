@@ -22,8 +22,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Sync theme with preferences
   useEffect(() => {
     if (preferences.theme === 'system') {
-      setTheme(systemColorScheme === 'dark' ? 'dark' : 'light');
+      // Set to use system theme
+      if (!isSystemTheme) {
+        useThemeStore.setState({ isSystemTheme: true });
+      }
     } else if (preferences.theme !== theme) {
+      // Set specific theme
       setTheme(preferences.theme as 'light' | 'dark');
     }
   }, [preferences.theme, systemColorScheme]);

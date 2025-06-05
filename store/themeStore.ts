@@ -37,6 +37,8 @@ export const useThemeStore = create<ThemeState>()(
       getActiveTheme: () => {
         const { theme, isSystemTheme } = get();
         if (isSystemTheme) {
+          // Note: This won't be reactive in non-component contexts
+          // For reactive usage, use useThemeColors hook instead
           const systemTheme = useColorScheme();
           return systemTheme === 'dark' ? 'dark' : 'light';
         }

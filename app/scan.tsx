@@ -7,12 +7,17 @@ import { useMealStore } from '@/store/mealStore';
 import FoodConfirmation from '@/components/FoodConfirmation';
 import { processImage } from '@/utils/imageProcessing';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Key for storing camera permission status
+const CAMERA_PERMISSION_KEY = 'camera_permission_requested';
 
 export default function ScanScreen() {
   const router = useRouter();
   const Colors = useThemeColors();
   
   const [permission, requestPermission] = useCameraPermissions();
+  const [permissionRequested, setPermissionRequested] = useState(false);
   const [facing, setFacing] = useState<CameraType>('back');
   const [isCapturing, setIsCapturing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -31,11 +36,38 @@ export default function ScanScreen() {
   const cameraRef = useRef<any>(null);
   const { addMeal } = useMealStore();
   
+  // Check if permission was previously requested
   useEffect(() => {
-    if (!permission?.granted) {
-      requestPermission();
-    }
+    const checkPermissionStatus = async () => {
+      try {
+        const wasRequested = await AsyncStorage.getItem(CAMERA_PERMISSION_KEY);
+        if (wasRequested === 'true') {
+          setPermissionRequested(true);
+        }
+      } catch (error) {
+        console.error('Error checking permission status:', error);
+      }
+    };
+    
+    checkPermissionStatus();
   }, []);
+  
+  // Request permission if not granted
+  useEffect(() => {
+    if (permission && !permission.granted && !permissionRequested) {
+      handleRequestPermission();
+    }
+  }, [permission, permissionRequested]);
+  
+  const handleRequestPermission = async () => {
+    try {
+      await requestPermission();
+      await AsyncStorage.setItem(CAMERA_PERMISSION_KEY, 'true');
+      setPermissionRequested(true);
+    } catch (error) {
+      console.error('Error requesting permission:', error);
+    }
+  };
   
   const handleCapture = async () => {
     if (isCapturing || isProcessing || !cameraRef.current) return;
@@ -126,7 +158,7 @@ export default function ScanScreen() {
         </Text>
         <TouchableOpacity 
           style={[styles.permissionButton, { backgroundColor: Colors.primary }]}
-          onPress={requestPermission}
+          onPress={handleRequestPermission}
         >
           <Text style={styles.permissionButtonText}>Grant Permission</Text>
         </TouchableOpacity>
