@@ -274,11 +274,7 @@ export const getMacrosForDate = async (date: string): Promise<{
     });
     
     // Sum macros
-    const result = {
-      protein: 0,
-      carbs: 0,
-      fat: 0
-    };
+    const result = { ...defaultMacros };
     
     mealsForDate.forEach((meal: any) => {
       if (meal.macros) {
@@ -315,11 +311,7 @@ export const getMacrosForWeek = async (): Promise<{
     });
     
     // Sum macros
-    const result = {
-      protein: 0,
-      carbs: 0,
-      fat: 0
-    };
+    const result = { ...defaultMacros };
     
     mealsForWeek.forEach((meal: any) => {
       if (meal.macros) {
@@ -356,11 +348,7 @@ export const getMacrosForMonth = async (): Promise<{
     });
     
     // Sum macros
-    const result = {
-      protein: 0,
-      carbs: 0,
-      fat: 0
-    };
+    const result = { ...defaultMacros };
     
     mealsForMonth.forEach((meal: any) => {
       if (meal.macros) {
