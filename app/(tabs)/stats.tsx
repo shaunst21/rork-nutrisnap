@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { TrendingUp, Calendar, Award, Utensils, BarChart, Target } from 'lucide-react-native';
-import Colors from '@/constants/colors';
 import { useStatsStore } from '@/store/statsStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import StatCard from '@/components/StatCard';
 import WeeklyCalorieChart from '@/components/WeeklyCalorieChart';
+import MacrosCard from '@/components/MacrosCard';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function StatsScreen() {
+  const Colors = useThemeColors();
+  
   const {
     todayCalories,
     weekCalories,
@@ -15,6 +18,7 @@ export default function StatsScreen() {
     averageDailyCalories,
     weeklyCalorieData,
     mealTypeCalories,
+    macros,
     commonFoods,
     currentStreak,
     longestStreak,
@@ -52,7 +56,7 @@ export default function StatsScreen() {
   
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: Colors.background }]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -64,8 +68,23 @@ export default function StatsScreen() {
         goal={preferences.dailyCalorieGoal}
       />
       
+      {/* Macros Cards */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Calories</Text>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Macros</Text>
+        
+        <MacrosCard 
+          macros={macros.today}
+          title="Today's Macros"
+        />
+        
+        <MacrosCard 
+          macros={macros.week}
+          title="Weekly Macros"
+        />
+      </View>
+      
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Calories</Text>
         
         <StatCard
           title="Today"
@@ -94,12 +113,12 @@ export default function StatsScreen() {
       
       {/* Meal Type Breakdown */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Today's Meal Breakdown</Text>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Today's Meal Breakdown</Text>
         
-        <View style={styles.mealTypeCard}>
+        <View style={[styles.mealTypeCard, { backgroundColor: Colors.card }]}>
           {totalMealTypeCalories > 0 ? (
             <>
-              <View style={styles.mealTypeBar}>
+              <View style={[styles.mealTypeBar, { backgroundColor: Colors.lightGray }]}>
                 {mealTypeCalories.breakfast > 0 && (
                   <View 
                     style={[
@@ -161,41 +180,51 @@ export default function StatsScreen() {
                 {mealTypeCalories.breakfast > 0 && (
                   <View style={styles.legendItem}>
                     <View style={[styles.legendColor, { backgroundColor: Colors.mealTypes.breakfast }]} />
-                    <Text style={styles.legendText}>Breakfast: {mealTypeCalories.breakfast} cal</Text>
+                    <Text style={[styles.legendText, { color: Colors.text }]}>
+                      Breakfast: {mealTypeCalories.breakfast} cal
+                    </Text>
                   </View>
                 )}
                 
                 {mealTypeCalories.lunch > 0 && (
                   <View style={styles.legendItem}>
                     <View style={[styles.legendColor, { backgroundColor: Colors.mealTypes.lunch }]} />
-                    <Text style={styles.legendText}>Lunch: {mealTypeCalories.lunch} cal</Text>
+                    <Text style={[styles.legendText, { color: Colors.text }]}>
+                      Lunch: {mealTypeCalories.lunch} cal
+                    </Text>
                   </View>
                 )}
                 
                 {mealTypeCalories.dinner > 0 && (
                   <View style={styles.legendItem}>
                     <View style={[styles.legendColor, { backgroundColor: Colors.mealTypes.dinner }]} />
-                    <Text style={styles.legendText}>Dinner: {mealTypeCalories.dinner} cal</Text>
+                    <Text style={[styles.legendText, { color: Colors.text }]}>
+                      Dinner: {mealTypeCalories.dinner} cal
+                    </Text>
                   </View>
                 )}
                 
                 {mealTypeCalories.snack > 0 && (
                   <View style={styles.legendItem}>
                     <View style={[styles.legendColor, { backgroundColor: Colors.mealTypes.snack }]} />
-                    <Text style={styles.legendText}>Snack: {mealTypeCalories.snack} cal</Text>
+                    <Text style={[styles.legendText, { color: Colors.text }]}>
+                      Snack: {mealTypeCalories.snack} cal
+                    </Text>
                   </View>
                 )}
                 
                 {mealTypeCalories.other > 0 && (
                   <View style={styles.legendItem}>
                     <View style={[styles.legendColor, { backgroundColor: Colors.mediumGray }]} />
-                    <Text style={styles.legendText}>Other: {mealTypeCalories.other} cal</Text>
+                    <Text style={[styles.legendText, { color: Colors.text }]}>
+                      Other: {mealTypeCalories.other} cal
+                    </Text>
                   </View>
                 )}
               </View>
             </>
           ) : (
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: Colors.subtext }]}>
               No meals logged today. Add meals to see your breakdown.
             </Text>
           )}
@@ -203,7 +232,7 @@ export default function StatsScreen() {
       </View>
       
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Streaks</Text>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Streaks</Text>
         
         <StatCard
           title="Current Streak"
@@ -221,23 +250,23 @@ export default function StatsScreen() {
       </View>
       
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Most Common Foods</Text>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Most Common Foods</Text>
         
         {commonFoods.length === 0 ? (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>
+            <Text style={[styles.emptyText, { color: Colors.subtext }]}>
               No food data yet. Start logging meals to see your most common foods.
             </Text>
           </View>
         ) : (
           commonFoods.map((food, index) => (
-            <View key={index} style={styles.foodItem}>
-              <View style={styles.foodRank}>
+            <View key={index} style={[styles.foodItem, { backgroundColor: Colors.card }]}>
+              <View style={[styles.foodRank, { backgroundColor: Colors.primary }]}>
                 <Text style={styles.rankText}>{index + 1}</Text>
               </View>
               <View style={styles.foodInfo}>
-                <Text style={styles.foodName}>{food.food}</Text>
-                <Text style={styles.foodCount}>
+                <Text style={[styles.foodName, { color: Colors.text }]}>{food.food}</Text>
+                <Text style={[styles.foodCount, { color: Colors.subtext }]}>
                   {food.count} time{food.count !== 1 ? 's' : ''}
                 </Text>
               </View>
@@ -253,7 +282,6 @@ export default function StatsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
     paddingBottom: 24,
@@ -264,17 +292,15 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
     marginHorizontal: 16,
     marginBottom: 8,
   },
   mealTypeCard: {
-    backgroundColor: Colors.card,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: Colors.text,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -283,7 +309,6 @@ const styles = StyleSheet.create({
   mealTypeBar: {
     height: 24,
     borderRadius: 12,
-    backgroundColor: Colors.lightGray,
     flexDirection: 'row',
     overflow: 'hidden',
     marginBottom: 16,
@@ -307,7 +332,6 @@ const styles = StyleSheet.create({
   },
   legendText: {
     fontSize: 14,
-    color: Colors.text,
   },
   emptyState: {
     padding: 24,
@@ -316,18 +340,16 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: Colors.subtext,
     textAlign: 'center',
   },
   foodItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.card,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: Colors.text,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -337,7 +359,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: Colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -353,10 +374,8 @@ const styles = StyleSheet.create({
   foodName: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.text,
   },
   foodCount: {
     fontSize: 14,
-    color: Colors.subtext,
   },
 });

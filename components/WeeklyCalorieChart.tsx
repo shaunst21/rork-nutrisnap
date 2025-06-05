@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
-import Colors from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface WeeklyCalorieChartProps {
   data: Array<{
@@ -11,6 +11,8 @@ interface WeeklyCalorieChartProps {
 }
 
 const WeeklyCalorieChart = ({ data, goal }: WeeklyCalorieChartProps) => {
+  const Colors = useThemeColors();
+  
   // Find the maximum value for scaling
   const maxCalories = Math.max(
     ...data.map(item => item.calories),
@@ -22,8 +24,8 @@ const WeeklyCalorieChart = ({ data, goal }: WeeklyCalorieChartProps) => {
   const barWidth = chartWidth / data.length - 8; // 8px gap between bars
   
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Weekly Calories</Text>
+    <View style={[styles.container, { backgroundColor: Colors.card }]}>
+      <Text style={[styles.title, { color: Colors.text }]}>Weekly Calories</Text>
       
       <View style={styles.chartContainer}>
         {/* Goal line if provided */}
@@ -33,10 +35,11 @@ const WeeklyCalorieChart = ({ data, goal }: WeeklyCalorieChartProps) => {
               styles.goalLine, 
               { 
                 top: `${100 - (goal / maxCalories) * 100}%`,
+                backgroundColor: Colors.accent,
               }
             ]}
           >
-            <Text style={styles.goalText}>{goal} cal</Text>
+            <Text style={[styles.goalText, { color: Colors.accent }]}>{goal} cal</Text>
           </View>
         )}
         
@@ -58,8 +61,8 @@ const WeeklyCalorieChart = ({ data, goal }: WeeklyCalorieChartProps) => {
                     }
                   ]}
                 />
-                <Text style={styles.dayLabel}>{item.day}</Text>
-                <Text style={styles.valueLabel}>{item.calories}</Text>
+                <Text style={[styles.dayLabel, { color: Colors.subtext }]}>{item.day}</Text>
+                <Text style={[styles.valueLabel, { color: Colors.subtext }]}>{item.calories}</Text>
               </View>
             );
           })}
@@ -71,12 +74,11 @@ const WeeklyCalorieChart = ({ data, goal }: WeeklyCalorieChartProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.card,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: Colors.text,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -85,7 +87,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
     marginBottom: 16,
   },
   chartContainer: {
@@ -97,7 +98,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 1,
-    backgroundColor: Colors.accent,
     zIndex: 1,
   },
   goalText: {
@@ -105,7 +105,6 @@ const styles = StyleSheet.create({
     right: 0,
     top: -18,
     fontSize: 12,
-    color: Colors.accent,
     fontWeight: '500',
   },
   barsContainer: {
@@ -126,12 +125,10 @@ const styles = StyleSheet.create({
   },
   dayLabel: {
     fontSize: 12,
-    color: Colors.subtext,
     marginTop: 4,
   },
   valueLabel: {
     fontSize: 10,
-    color: Colors.subtext,
     marginTop: 2,
   },
 });

@@ -12,17 +12,24 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Check, X } from 'lucide-react-native';
-import Colors from '@/constants/colors';
 import { useMealStore } from '@/store/mealStore';
 import MealTypeSelector from '@/components/MealTypeSelector';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function ManualEntryScreen() {
   const router = useRouter();
+  const Colors = useThemeColors();
+  
   const [food, setFood] = useState('');
   const [calories, setCalories] = useState('');
   const [notes, setNotes] = useState('');
   const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Macros
+  const [protein, setProtein] = useState('');
+  const [carbs, setCarbs] = useState('');
+  const [fat, setFat] = useState('');
   
   const { addMeal } = useMealStore();
   
@@ -39,6 +46,11 @@ export default function ManualEntryScreen() {
       return;
     }
     
+    // Parse macros
+    const proteinNum = parseFloat(protein) || 0;
+    const carbsNum = parseFloat(carbs) || 0;
+    const fatNum = parseFloat(fat) || 0;
+    
     setIsSubmitting(true);
     
     try {
@@ -48,6 +60,11 @@ export default function ManualEntryScreen() {
         method: 'manual',
         mealType,
         notes: notes.trim() || undefined,
+        macros: {
+          protein: proteinNum,
+          carbs: carbsNum,
+          fat: fatNum
+        }
       });
       
       router.back();
@@ -61,26 +78,33 @@ export default function ManualEntryScreen() {
   
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: Colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
+        <View style={[styles.header, { borderBottomColor: Colors.border }]}>
           <TouchableOpacity
             style={styles.closeButton}
             onPress={() => router.back()}
           >
             <X size={24} color={Colors.text} />
           </TouchableOpacity>
-          <Text style={styles.title}>Add Food Manually</Text>
+          <Text style={[styles.title, { color: Colors.text }]}>Add Food Manually</Text>
           <View style={styles.placeholder} />
         </View>
         
         <View style={styles.formContainer}>
-          <Text style={styles.label}>Food Name</Text>
+          <Text style={[styles.label, { color: Colors.text }]}>Food Name</Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input, 
+              { 
+                backgroundColor: Colors.card,
+                borderColor: Colors.border,
+                color: Colors.text
+              }
+            ]}
             value={food}
             onChangeText={setFood}
             placeholder="e.g. Chicken Salad"
@@ -88,9 +112,16 @@ export default function ManualEntryScreen() {
             autoCapitalize="words"
           />
           
-          <Text style={styles.label}>Calories</Text>
+          <Text style={[styles.label, { color: Colors.text }]}>Calories</Text>
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input, 
+              { 
+                backgroundColor: Colors.card,
+                borderColor: Colors.border,
+                color: Colors.text
+              }
+            ]}
             value={calories}
             onChangeText={setCalories}
             placeholder="e.g. 350"
@@ -98,14 +129,82 @@ export default function ManualEntryScreen() {
             keyboardType="number-pad"
           />
           
+          <Text style={[styles.label, { color: Colors.text }]}>Macros (Optional)</Text>
+          <View style={styles.macrosContainer}>
+            <View style={styles.macroInputGroup}>
+              <Text style={[styles.macroLabel, { color: Colors.macros.protein }]}>Protein (g)</Text>
+              <TextInput
+                style={[
+                  styles.macroInput, 
+                  { 
+                    backgroundColor: Colors.card,
+                    borderColor: Colors.border,
+                    color: Colors.text
+                  }
+                ]}
+                value={protein}
+                onChangeText={setProtein}
+                placeholder="0"
+                placeholderTextColor={Colors.mediumGray}
+                keyboardType="decimal-pad"
+              />
+            </View>
+            
+            <View style={styles.macroInputGroup}>
+              <Text style={[styles.macroLabel, { color: Colors.macros.carbs }]}>Carbs (g)</Text>
+              <TextInput
+                style={[
+                  styles.macroInput, 
+                  { 
+                    backgroundColor: Colors.card,
+                    borderColor: Colors.border,
+                    color: Colors.text
+                  }
+                ]}
+                value={carbs}
+                onChangeText={setCarbs}
+                placeholder="0"
+                placeholderTextColor={Colors.mediumGray}
+                keyboardType="decimal-pad"
+              />
+            </View>
+            
+            <View style={styles.macroInputGroup}>
+              <Text style={[styles.macroLabel, { color: Colors.macros.fat }]}>Fat (g)</Text>
+              <TextInput
+                style={[
+                  styles.macroInput, 
+                  { 
+                    backgroundColor: Colors.card,
+                    borderColor: Colors.border,
+                    color: Colors.text
+                  }
+                ]}
+                value={fat}
+                onChangeText={setFat}
+                placeholder="0"
+                placeholderTextColor={Colors.mediumGray}
+                keyboardType="decimal-pad"
+              />
+            </View>
+          </View>
+          
           <MealTypeSelector 
             selectedType={mealType}
             onSelect={setMealType}
           />
           
-          <Text style={styles.label}>Notes (Optional)</Text>
+          <Text style={[styles.label, { color: Colors.text }]}>Notes (Optional)</Text>
           <TextInput
-            style={[styles.input, styles.notesInput]}
+            style={[
+              styles.input, 
+              styles.notesInput, 
+              { 
+                backgroundColor: Colors.card,
+                borderColor: Colors.border,
+                color: Colors.text
+              }
+            ]}
             value={notes}
             onChangeText={setNotes}
             placeholder="e.g. With dressing on the side"
@@ -115,7 +214,11 @@ export default function ManualEntryScreen() {
           />
           
           <TouchableOpacity
-            style={[styles.submitButton, (!food.trim() || !calories) && styles.disabledButton]}
+            style={[
+              styles.submitButton, 
+              { backgroundColor: Colors.primary },
+              (!food.trim() || !calories) && styles.disabledButton
+            ]}
             onPress={handleSubmit}
             disabled={isSubmitting || !food.trim() || !calories}
           >
@@ -124,12 +227,12 @@ export default function ManualEntryScreen() {
           </TouchableOpacity>
         </View>
         
-        <View style={styles.infoContainer}>
-          <Text style={styles.infoTitle}>Tips for Accurate Tracking</Text>
-          <Text style={styles.infoText}>• Check food labels for exact calorie counts</Text>
-          <Text style={styles.infoText}>• Use measuring cups or a food scale for portion sizes</Text>
-          <Text style={styles.infoText}>• Include all ingredients when tracking meals</Text>
-          <Text style={styles.infoText}>• Be consistent with your tracking habits</Text>
+        <View style={[styles.infoContainer, { backgroundColor: Colors.card }]}>
+          <Text style={[styles.infoTitle, { color: Colors.text }]}>Tips for Accurate Tracking</Text>
+          <Text style={[styles.infoText, { color: Colors.subtext }]}>• Check food labels for exact calorie counts</Text>
+          <Text style={[styles.infoText, { color: Colors.subtext }]}>• Use measuring cups or a food scale for portion sizes</Text>
+          <Text style={[styles.infoText, { color: Colors.subtext }]}>• Include all ingredients when tracking meals</Text>
+          <Text style={[styles.infoText, { color: Colors.subtext }]}>• Be consistent with your tracking habits</Text>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -139,7 +242,6 @@ export default function ManualEntryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -151,7 +253,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   closeButton: {
     padding: 8,
@@ -159,7 +260,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
   },
   placeholder: {
     width: 40,
@@ -170,25 +270,42 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.text,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: Colors.card,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 12,
     fontSize: 16,
     marginBottom: 16,
-    color: Colors.text,
+  },
+  macrosContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  macroInputGroup: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  macroLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  macroInput: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 8,
+    fontSize: 14,
+    textAlign: 'center',
   },
   notesInput: {
     minHeight: 80,
     textAlignVertical: 'top',
   },
   submitButton: {
-    backgroundColor: Colors.primary,
     borderRadius: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -207,19 +324,16 @@ const styles = StyleSheet.create({
   },
   infoContainer: {
     padding: 16,
-    backgroundColor: Colors.card,
     margin: 16,
     borderRadius: 8,
   },
   infoTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
     marginBottom: 12,
   },
   infoText: {
     fontSize: 14,
-    color: Colors.subtext,
     marginBottom: 8,
   },
 });

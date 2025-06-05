@@ -8,6 +8,7 @@ interface PreferencesState {
   isLoading: boolean;
   error: string | null;
   updatePreferences: (preferences: Partial<UserPreferences>) => void;
+  updateMacroGoals: (macros: Partial<UserPreferences['macroGoals']>) => void;
 }
 
 const DEFAULT_PREFERENCES: UserPreferences = {
@@ -15,6 +16,11 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   weeklyCalorieGoal: 14000,
   theme: 'light',
   notifications: true,
+  macroGoals: {
+    protein: 150, // Default protein goal in grams
+    carbs: 225,   // Default carbs goal in grams
+    fat: 67,      // Default fat goal in grams
+  }
 };
 
 export const usePreferencesStore = create<PreferencesState>()(
@@ -32,6 +38,18 @@ export const usePreferencesStore = create<PreferencesState>()(
           }
         }));
       },
+      
+      updateMacroGoals: (macros) => {
+        set(state => ({
+          preferences: {
+            ...state.preferences,
+            macroGoals: {
+              ...state.preferences.macroGoals,
+              ...macros
+            }
+          }
+        }));
+      }
     }),
     {
       name: 'preferences-storage',

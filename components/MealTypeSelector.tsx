@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Coffee, Sun, Moon, Cookie } from 'lucide-react-native';
-import Colors from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
@@ -11,16 +11,21 @@ interface MealTypeSelectorProps {
 }
 
 const MealTypeSelector = ({ selectedType, onSelect }: MealTypeSelectorProps) => {
+  const Colors = useThemeColors();
+  
   return (
     <View style={styles.container}>
-      <Text style={styles.label}>Meal Type</Text>
+      <Text style={[styles.label, { color: Colors.text }]}>Meal Type</Text>
       
       <View style={styles.optionsContainer}>
         <TouchableOpacity
           style={[
             styles.option,
-            selectedType === 'breakfast' && styles.selectedOption,
-            { borderColor: Colors.mealTypes.breakfast }
+            { backgroundColor: Colors.card },
+            selectedType === 'breakfast' && [
+              styles.selectedOption,
+              { borderColor: Colors.mealTypes.breakfast }
+            ],
           ]}
           onPress={() => onSelect('breakfast')}
         >
@@ -31,6 +36,7 @@ const MealTypeSelector = ({ selectedType, onSelect }: MealTypeSelectorProps) => 
           <Text 
             style={[
               styles.optionText,
+              { color: Colors.text },
               selectedType === 'breakfast' && { color: Colors.mealTypes.breakfast }
             ]}
           >
@@ -41,8 +47,11 @@ const MealTypeSelector = ({ selectedType, onSelect }: MealTypeSelectorProps) => 
         <TouchableOpacity
           style={[
             styles.option,
-            selectedType === 'lunch' && styles.selectedOption,
-            { borderColor: Colors.mealTypes.lunch }
+            { backgroundColor: Colors.card },
+            selectedType === 'lunch' && [
+              styles.selectedOption,
+              { borderColor: Colors.mealTypes.lunch }
+            ],
           ]}
           onPress={() => onSelect('lunch')}
         >
@@ -53,6 +62,7 @@ const MealTypeSelector = ({ selectedType, onSelect }: MealTypeSelectorProps) => 
           <Text 
             style={[
               styles.optionText,
+              { color: Colors.text },
               selectedType === 'lunch' && { color: Colors.mealTypes.lunch }
             ]}
           >
@@ -63,8 +73,11 @@ const MealTypeSelector = ({ selectedType, onSelect }: MealTypeSelectorProps) => 
         <TouchableOpacity
           style={[
             styles.option,
-            selectedType === 'dinner' && styles.selectedOption,
-            { borderColor: Colors.mealTypes.dinner }
+            { backgroundColor: Colors.card },
+            selectedType === 'dinner' && [
+              styles.selectedOption,
+              { borderColor: Colors.mealTypes.dinner }
+            ],
           ]}
           onPress={() => onSelect('dinner')}
         >
@@ -75,6 +88,7 @@ const MealTypeSelector = ({ selectedType, onSelect }: MealTypeSelectorProps) => 
           <Text 
             style={[
               styles.optionText,
+              { color: Colors.text },
               selectedType === 'dinner' && { color: Colors.mealTypes.dinner }
             ]}
           >
@@ -85,8 +99,11 @@ const MealTypeSelector = ({ selectedType, onSelect }: MealTypeSelectorProps) => 
         <TouchableOpacity
           style={[
             styles.option,
-            selectedType === 'snack' && styles.selectedOption,
-            { borderColor: Colors.mealTypes.snack }
+            { backgroundColor: Colors.card },
+            selectedType === 'snack' && [
+              styles.selectedOption,
+              { borderColor: Colors.mealTypes.snack }
+            ],
           ]}
           onPress={() => onSelect('snack')}
         >
@@ -97,6 +114,7 @@ const MealTypeSelector = ({ selectedType, onSelect }: MealTypeSelectorProps) => 
           <Text 
             style={[
               styles.optionText,
+              { color: Colors.text },
               selectedType === 'snack' && { color: Colors.mealTypes.snack }
             ]}
           >
@@ -115,7 +133,6 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.text,
     marginBottom: 8,
   },
   optionsContainer: {
@@ -131,18 +148,15 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'transparent',
     marginBottom: 12,
-    backgroundColor: Colors.card,
   },
   selectedOption: {
     borderWidth: 2,
-    backgroundColor: Colors.background,
   },
   optionText: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.text,
     marginLeft: 8,
   },
 });

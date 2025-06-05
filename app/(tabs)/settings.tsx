@@ -18,17 +18,26 @@ import {
   Trash2, 
   RefreshCw,
   Shield,
-  HelpCircle
+  HelpCircle,
+  Dumbbell
 } from 'lucide-react-native';
-import Colors from '@/constants/colors';
 import { usePreferencesStore } from '@/store/preferencesStore';
+import { useThemeStore } from '@/store/themeStore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function SettingsScreen() {
-  const { preferences, updatePreferences } = usePreferencesStore();
+  const Colors = useThemeColors();
+  const { preferences, updatePreferences, updateMacroGoals } = usePreferencesStore();
+  const { theme, toggleTheme } = useThemeStore();
   
   const [dailyGoal, setDailyGoal] = useState(preferences.dailyCalorieGoal.toString());
   const [weeklyGoal, setWeeklyGoal] = useState(preferences.weeklyCalorieGoal.toString());
+  
+  // Macro goals
+  const [proteinGoal, setProteinGoal] = useState(preferences.macroGoals.protein.toString());
+  const [carbsGoal, setCarbsGoal] = useState(preferences.macroGoals.carbs.toString());
+  const [fatGoal, setFatGoal] = useState(preferences.macroGoals.fat.toString());
   
   const handleSaveGoals = () => {
     const dailyGoalNum = parseInt(dailyGoal, 10);
@@ -52,22 +61,46 @@ export default function SettingsScreen() {
     Alert.alert('Success', 'Calorie goals updated successfully');
   };
   
+  const handleSaveMacroGoals = () => {
+    const proteinGoalNum = parseInt(proteinGoal, 10);
+    const carbsGoalNum = parseInt(carbsGoal, 10);
+    const fatGoalNum = parseInt(fatGoal, 10);
+    
+    if (isNaN(proteinGoalNum) || proteinGoalNum < 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid protein goal');
+      return;
+    }
+    
+    if (isNaN(carbsGoalNum) || carbsGoalNum < 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid carbs goal');
+      return;
+    }
+    
+    if (isNaN(fatGoalNum) || fatGoalNum < 0) {
+      Alert.alert('Invalid Input', 'Please enter a valid fat goal');
+      return;
+    }
+    
+    updateMacroGoals({
+      protein: proteinGoalNum,
+      carbs: carbsGoalNum,
+      fat: fatGoalNum,
+    });
+    
+    Alert.alert('Success', 'Macro goals updated successfully');
+  };
+  
   const toggleNotifications = () => {
     updatePreferences({
       notifications: !preferences.notifications,
     });
   };
   
-  const toggleTheme = () => {
+  const handleToggleTheme = () => {
+    toggleTheme();
     updatePreferences({
-      theme: preferences.theme === 'light' ? 'dark' : 'light',
+      theme: theme === 'light' ? 'dark' : 'light',
     });
-    
-    Alert.alert(
-      'Theme Changed',
-      'Theme changes will take effect after restarting the app',
-      [{ text: 'OK' }]
-    );
   };
   
   const clearAllData = () => {
@@ -101,52 +134,151 @@ export default function SettingsScreen() {
   };
   
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={[styles.container, { backgroundColor: Colors.background }]}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Calorie Goals</Text>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Calorie Goals</Text>
         
-        <View style={styles.settingItem}>
+        <View style={[styles.settingItem, { borderBottomColor: Colors.border }]}>
           <View style={styles.settingHeader}>
             <Target size={20} color={Colors.primary} />
-            <Text style={styles.settingTitle}>Daily Calorie Goal</Text>
+            <Text style={[styles.settingTitle, { color: Colors.text }]}>Daily Calorie Goal</Text>
           </View>
           
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input, 
+              { 
+                backgroundColor: Colors.card,
+                borderColor: Colors.border,
+                color: Colors.text
+              }
+            ]}
             value={dailyGoal}
             onChangeText={setDailyGoal}
             keyboardType="number-pad"
             placeholder="e.g. 2000"
+            placeholderTextColor={Colors.mediumGray}
           />
         </View>
         
-        <View style={styles.settingItem}>
+        <View style={[styles.settingItem, { borderBottomColor: Colors.border }]}>
           <View style={styles.settingHeader}>
             <Target size={20} color={Colors.primary} />
-            <Text style={styles.settingTitle}>Weekly Calorie Goal</Text>
+            <Text style={[styles.settingTitle, { color: Colors.text }]}>Weekly Calorie Goal</Text>
           </View>
           
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input, 
+              { 
+                backgroundColor: Colors.card,
+                borderColor: Colors.border,
+                color: Colors.text
+              }
+            ]}
             value={weeklyGoal}
             onChangeText={setWeeklyGoal}
             keyboardType="number-pad"
             placeholder="e.g. 14000"
+            placeholderTextColor={Colors.mediumGray}
           />
         </View>
         
-        <TouchableOpacity style={styles.saveButton} onPress={handleSaveGoals}>
-          <Text style={styles.saveButtonText}>Save Goals</Text>
+        <TouchableOpacity 
+          style={[styles.saveButton, { backgroundColor: Colors.primary }]} 
+          onPress={handleSaveGoals}
+        >
+          <Text style={styles.saveButtonText}>Save Calorie Goals</Text>
         </TouchableOpacity>
       </View>
       
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>App Settings</Text>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Macro Goals</Text>
         
-        <View style={styles.settingItem}>
+        <View style={[styles.settingItem, { borderBottomColor: Colors.border }]}>
+          <View style={styles.settingHeader}>
+            <Dumbbell size={20} color={Colors.macros.protein} />
+            <Text style={[styles.settingTitle, { color: Colors.text }]}>Protein Goal (g)</Text>
+          </View>
+          
+          <TextInput
+            style={[
+              styles.input, 
+              { 
+                backgroundColor: Colors.card,
+                borderColor: Colors.border,
+                color: Colors.text
+              }
+            ]}
+            value={proteinGoal}
+            onChangeText={setProteinGoal}
+            keyboardType="number-pad"
+            placeholder="e.g. 150"
+            placeholderTextColor={Colors.mediumGray}
+          />
+        </View>
+        
+        <View style={[styles.settingItem, { borderBottomColor: Colors.border }]}>
+          <View style={styles.settingHeader}>
+            <Dumbbell size={20} color={Colors.macros.carbs} />
+            <Text style={[styles.settingTitle, { color: Colors.text }]}>Carbs Goal (g)</Text>
+          </View>
+          
+          <TextInput
+            style={[
+              styles.input, 
+              { 
+                backgroundColor: Colors.card,
+                borderColor: Colors.border,
+                color: Colors.text
+              }
+            ]}
+            value={carbsGoal}
+            onChangeText={setCarbsGoal}
+            keyboardType="number-pad"
+            placeholder="e.g. 225"
+            placeholderTextColor={Colors.mediumGray}
+          />
+        </View>
+        
+        <View style={[styles.settingItem, { borderBottomColor: Colors.border }]}>
+          <View style={styles.settingHeader}>
+            <Dumbbell size={20} color={Colors.macros.fat} />
+            <Text style={[styles.settingTitle, { color: Colors.text }]}>Fat Goal (g)</Text>
+          </View>
+          
+          <TextInput
+            style={[
+              styles.input, 
+              { 
+                backgroundColor: Colors.card,
+                borderColor: Colors.border,
+                color: Colors.text
+              }
+            ]}
+            value={fatGoal}
+            onChangeText={setFatGoal}
+            keyboardType="number-pad"
+            placeholder="e.g. 67"
+            placeholderTextColor={Colors.mediumGray}
+          />
+        </View>
+        
+        <TouchableOpacity 
+          style={[styles.saveButton, { backgroundColor: Colors.primary }]} 
+          onPress={handleSaveMacroGoals}
+        >
+          <Text style={styles.saveButtonText}>Save Macro Goals</Text>
+        </TouchableOpacity>
+      </View>
+      
+      <View style={styles.section}>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>App Settings</Text>
+        
+        <View style={[styles.settingItem, { borderBottomColor: Colors.border }]}>
           <View style={styles.settingHeader}>
             <Bell size={20} color={Colors.primary} />
-            <Text style={styles.settingTitle}>Notifications</Text>
+            <Text style={[styles.settingTitle, { color: Colors.text }]}>Notifications</Text>
           </View>
           
           <Switch
@@ -157,15 +289,15 @@ export default function SettingsScreen() {
           />
         </View>
         
-        <View style={styles.settingItem}>
+        <View style={[styles.settingItem, { borderBottomColor: Colors.border }]}>
           <View style={styles.settingHeader}>
             <Moon size={20} color={Colors.primary} />
-            <Text style={styles.settingTitle}>Dark Theme</Text>
+            <Text style={[styles.settingTitle, { color: Colors.text }]}>Dark Theme</Text>
           </View>
           
           <Switch
-            value={preferences.theme === 'dark'}
-            onValueChange={toggleTheme}
+            value={theme === 'dark'}
+            onValueChange={handleToggleTheme}
             trackColor={{ false: Colors.lightGray, true: Colors.primary }}
             thumbColor={Platform.OS === 'ios' ? undefined : '#FFFFFF'}
           />
@@ -173,39 +305,42 @@ export default function SettingsScreen() {
       </View>
       
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Data Management</Text>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Data Management</Text>
         
-        <TouchableOpacity style={styles.dangerButton} onPress={clearAllData}>
+        <TouchableOpacity 
+          style={[styles.dangerButton, { backgroundColor: Colors.error }]} 
+          onPress={clearAllData}
+        >
           <Trash2 size={20} color="#FFFFFF" />
           <Text style={styles.dangerButtonText}>Clear All Data</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.syncButton}>
+        <TouchableOpacity style={[styles.syncButton, { backgroundColor: Colors.info }]}>
           <RefreshCw size={20} color="#FFFFFF" />
           <Text style={styles.syncButtonText}>Sync Data</Text>
         </TouchableOpacity>
       </View>
       
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>About</Text>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>About</Text>
         
-        <View style={styles.settingItem}>
+        <View style={[styles.settingItem, { borderBottomColor: Colors.border }]}>
           <View style={styles.settingHeader}>
             <Info size={20} color={Colors.primary} />
-            <Text style={styles.settingTitle}>Version</Text>
+            <Text style={[styles.settingTitle, { color: Colors.text }]}>Version</Text>
           </View>
           
-          <Text style={styles.versionText}>1.0.0</Text>
+          <Text style={[styles.versionText, { color: Colors.subtext }]}>1.0.0</Text>
         </View>
         
-        <TouchableOpacity style={styles.aboutButton}>
+        <TouchableOpacity style={[styles.aboutButton, { borderBottomColor: Colors.border }]}>
           <Shield size={20} color={Colors.primary} />
-          <Text style={styles.aboutButtonText}>Privacy Policy</Text>
+          <Text style={[styles.aboutButtonText, { color: Colors.text }]}>Privacy Policy</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.aboutButton}>
+        <TouchableOpacity style={[styles.aboutButton, { borderBottomColor: Colors.border }]}>
           <HelpCircle size={20} color={Colors.primary} />
-          <Text style={styles.aboutButtonText}>Help & Support</Text>
+          <Text style={[styles.aboutButtonText, { color: Colors.text }]}>Help & Support</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -215,7 +350,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   section: {
     marginVertical: 16,
@@ -224,7 +358,6 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
     marginBottom: 16,
   },
   settingItem: {
@@ -233,7 +366,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   settingHeader: {
     flexDirection: 'row',
@@ -241,21 +373,17 @@ const styles = StyleSheet.create({
   },
   settingTitle: {
     fontSize: 16,
-    color: Colors.text,
     marginLeft: 12,
   },
   input: {
-    backgroundColor: Colors.card,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: Colors.border,
     padding: 8,
     width: 100,
     textAlign: 'center',
     fontSize: 16,
   },
   saveButton: {
-    backgroundColor: Colors.primary,
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
@@ -267,7 +395,6 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   dangerButton: {
-    backgroundColor: Colors.error,
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
@@ -282,7 +409,6 @@ const styles = StyleSheet.create({
     marginLeft: 8,
   },
   syncButton: {
-    backgroundColor: Colors.info,
     borderRadius: 8,
     padding: 12,
     alignItems: 'center',
@@ -301,15 +427,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
   },
   aboutButtonText: {
     fontSize: 16,
-    color: Colors.text,
     marginLeft: 12,
   },
   versionText: {
     fontSize: 16,
-    color: Colors.subtext,
   },
 });

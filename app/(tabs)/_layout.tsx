@@ -1,12 +1,13 @@
 import React from "react";
 import { Tabs } from "expo-router";
 import { Home, History, BarChart3, Camera, PlusCircle, Settings } from "lucide-react-native";
-import Colors from "@/constants/colors";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 export default function TabLayout() {
   const router = useRouter();
+  const Colors = useThemeColors();
   
   const openScanModal = () => {
     router.push("/scan");
@@ -71,7 +72,7 @@ export default function TabLayout() {
         options={{
           title: "Scan",
           tabBarIcon: ({ color }) => (
-            <View style={styles.scanButton}>
+            <View style={[styles.scanButton, { backgroundColor: Colors.primary }]}>
               <Camera size={24} color="#FFFFFF" />
             </View>
           ),
@@ -115,14 +116,12 @@ const styles = StyleSheet.create({
     marginLeft: 16,
   },
   scanButton: {
-    backgroundColor: Colors.primary,
     width: 56,
     height: 56,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: Colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 4,

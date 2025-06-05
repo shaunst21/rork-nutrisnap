@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Colors from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface StatCardProps {
   title: string;
@@ -9,12 +9,15 @@ interface StatCardProps {
   color?: string;
 }
 
-const StatCard = ({ title, value, icon, color = Colors.primary }: StatCardProps) => {
+const StatCard = ({ title, value, icon, color }: StatCardProps) => {
+  const Colors = useThemeColors();
+  const borderColor = color || Colors.primary;
+  
   return (
-    <View style={[styles.card, { borderLeftColor: color }]}>
+    <View style={[styles.card, { backgroundColor: Colors.card, borderLeftColor: borderColor }]}>
       <View style={styles.content}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={[styles.value, { color }]}>{value}</Text>
+        <Text style={[styles.title, { color: Colors.subtext }]}>{title}</Text>
+        <Text style={[styles.value, { color: borderColor }]}>{value}</Text>
       </View>
       {icon && <View style={styles.iconContainer}>{icon}</View>}
     </View>
@@ -23,12 +26,11 @@ const StatCard = ({ title, value, icon, color = Colors.primary }: StatCardProps)
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: Colors.text,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -43,7 +45,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 14,
-    color: Colors.subtext,
     marginBottom: 4,
   },
   value: {

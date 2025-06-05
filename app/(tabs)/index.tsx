@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Camera, Plus, TrendingUp, Award, Target } from 'lucide-react-native';
-import Colors from '@/constants/colors';
 import { useMealStore } from '@/store/mealStore';
 import { useStatsStore } from '@/store/statsStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
@@ -10,18 +9,22 @@ import MealCard from '@/components/MealCard';
 import StatCard from '@/components/StatCard';
 import EmptyState from '@/components/EmptyState';
 import CalorieGoalProgress from '@/components/CalorieGoalProgress';
+import MacrosCard from '@/components/MacrosCard';
 import { checkAndUpdateStreak } from '@/utils/streakHelpers';
 import { formatDate } from '@/utils/dateHelpers';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function HomeScreen() {
   const router = useRouter();
   const [refreshing, setRefreshing] = useState(false);
+  const Colors = useThemeColors();
   
   const { meals, fetchMeals, syncOfflineMeals } = useMealStore();
   const { 
     todayCalories, 
     currentStreak, 
     longestStreak,
+    macros,
     fetchStats 
   } = useStatsStore();
   const { preferences } = usePreferencesStore();
@@ -64,21 +67,27 @@ export default function HomeScreen() {
   
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: Colors.background }]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
       <View style={styles.header}>
-        <Text style={styles.greeting}>Hello!</Text>
-        <Text style={styles.subtitle}>Track your nutrition today</Text>
+        <Text style={[styles.greeting, { color: Colors.text }]}>Hello!</Text>
+        <Text style={[styles.subtitle, { color: Colors.subtext }]}>Track your nutrition today</Text>
       </View>
       
       {/* Calorie Goal Progress */}
       <CalorieGoalProgress 
         current={todayCalories} 
         goal={preferences.dailyCalorieGoal} 
+      />
+      
+      {/* Macros Card */}
+      <MacrosCard 
+        macros={macros.today}
+        title="Today's Macros"
       />
       
       <View style={styles.statsContainer}>
@@ -97,25 +106,31 @@ export default function HomeScreen() {
       </View>
       
       <View style={styles.actionsContainer}>
-        <TouchableOpacity style={styles.actionButton} onPress={handleScan}>
+        <TouchableOpacity 
+          style={[styles.actionButton, { backgroundColor: Colors.card }]} 
+          onPress={handleScan}
+        >
           <View style={[styles.actionIcon, { backgroundColor: Colors.primary }]}>
             <Camera size={24} color="#FFFFFF" />
           </View>
-          <Text style={styles.actionText}>Scan Food</Text>
+          <Text style={[styles.actionText, { color: Colors.text }]}>Scan Food</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.actionButton} onPress={handleManualEntry}>
+        <TouchableOpacity 
+          style={[styles.actionButton, { backgroundColor: Colors.card }]} 
+          onPress={handleManualEntry}
+        >
           <View style={[styles.actionIcon, { backgroundColor: Colors.secondary }]}>
             <Plus size={24} color="#FFFFFF" />
           </View>
-          <Text style={styles.actionText}>Add Manually</Text>
+          <Text style={[styles.actionText, { color: Colors.text }]}>Add Manually</Text>
         </TouchableOpacity>
       </View>
       
       <View style={styles.mealsSection}>
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Today's Meals</Text>
-          <Text style={styles.dateText}>{formatDate(new Date())}</Text>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Today's Meals</Text>
+          <Text style={[styles.dateText, { color: Colors.subtext }]}>{formatDate(new Date())}</Text>
         </View>
         
         {todayMeals.length === 0 ? (
@@ -134,6 +149,7 @@ export default function HomeScreen() {
               method={meal.method}
               mealType={meal.mealType}
               notes={meal.notes}
+              macros={meal.macros}
               onDelete={loadData}
             />
           ))
@@ -146,7 +162,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
   },
   contentContainer: {
     paddingBottom: 24,
@@ -158,12 +173,10 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: Colors.text,
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: Colors.subtext,
   },
   statsContainer: {
     marginVertical: 8,
@@ -177,11 +190,10 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     alignItems: 'center',
-    backgroundColor: Colors.card,
     borderRadius: 12,
     padding: 16,
     marginHorizontal: 8,
-    shadowColor: Colors.text,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -198,7 +210,6 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.text,
   },
   mealsSection: {
     marginTop: 16,
@@ -213,10 +224,8 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
   },
   dateText: {
     fontSize: 14,
-    color: Colors.subtext,
   },
 });

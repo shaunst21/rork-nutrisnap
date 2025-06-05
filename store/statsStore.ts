@@ -6,7 +6,10 @@ import {
   getCaloriesPerDayForWeek,
   getMostCommonFoods,
   getCaloriesByMealType,
-  getAverageDailyCalories
+  getAverageDailyCalories,
+  getMacrosForDate,
+  getMacrosForWeek,
+  getMacrosForMonth
 } from '@/utils/calorieHelpers';
 import { getStreakData } from '@/firebase';
 import { Stats } from '@/types';
@@ -41,6 +44,23 @@ export const useStatsStore = create<StatsState>((set) => ({
     snack: 0,
     other: 0
   },
+  macros: {
+    today: {
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    },
+    week: {
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    },
+    month: {
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    }
+  },
   isLoading: false,
   error: null,
   
@@ -58,7 +78,10 @@ export const useStatsStore = create<StatsState>((set) => ({
         mealTypeCalories,
         averageDailyCalories,
         commonFoods,
-        streakData
+        streakData,
+        todayMacros,
+        weekMacros,
+        monthMacros
       ] = await Promise.all([
         getCaloriesForDate(today),
         getCaloriesForWeek(),
@@ -67,7 +90,10 @@ export const useStatsStore = create<StatsState>((set) => ({
         getCaloriesByMealType(),
         getAverageDailyCalories(),
         getMostCommonFoods(5),
-        getStreakData()
+        getStreakData(),
+        getMacrosForDate(today),
+        getMacrosForWeek(),
+        getMacrosForMonth()
       ]);
       
       set({
@@ -80,6 +106,11 @@ export const useStatsStore = create<StatsState>((set) => ({
         commonFoods,
         currentStreak: streakData.currentStreak,
         longestStreak: streakData.longestStreak,
+        macros: {
+          today: todayMacros,
+          week: weekMacros,
+          month: monthMacros
+        },
         isLoading: false
       });
     } catch (error) {

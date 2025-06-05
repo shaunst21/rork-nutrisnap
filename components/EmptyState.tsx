@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Colors from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface EmptyStateProps {
   message: string;
@@ -8,10 +8,12 @@ interface EmptyStateProps {
 }
 
 const EmptyState = ({ message, icon }: EmptyStateProps) => {
+  const Colors = useThemeColors();
+  
   return (
     <View style={styles.container}>
       {icon && <View style={styles.iconContainer}>{icon}</View>}
-      <Text style={styles.message}>{message}</Text>
+      <Text style={[styles.message, { color: Colors.subtext }]}>{message}</Text>
     </View>
   );
 };
@@ -28,7 +30,6 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 16,
-    color: Colors.subtext,
     textAlign: 'center',
     maxWidth: '80%',
   },

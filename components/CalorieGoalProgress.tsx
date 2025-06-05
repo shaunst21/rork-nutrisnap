@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import Colors from '@/constants/colors';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface CalorieGoalProgressProps {
   current: number;
@@ -8,6 +8,7 @@ interface CalorieGoalProgressProps {
 }
 
 const CalorieGoalProgress = ({ current, goal }: CalorieGoalProgressProps) => {
+  const Colors = useThemeColors();
   const percentage = Math.min(Math.round((current / goal) * 100), 100);
   const isOverGoal = current > goal;
   
@@ -20,13 +21,13 @@ const CalorieGoalProgress = ({ current, goal }: CalorieGoalProgressProps) => {
   }
   
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: Colors.card }]}>
       <View style={styles.header}>
-        <Text style={styles.title}>Daily Calorie Goal</Text>
-        <Text style={styles.percentage}>{percentage}%</Text>
+        <Text style={[styles.title, { color: Colors.text }]}>Daily Calorie Goal</Text>
+        <Text style={[styles.percentage, { color: Colors.primary }]}>{percentage}%</Text>
       </View>
       
-      <View style={styles.progressContainer}>
+      <View style={[styles.progressContainer, { backgroundColor: Colors.lightGray }]}>
         <View 
           style={[
             styles.progressBar, 
@@ -36,12 +37,12 @@ const CalorieGoalProgress = ({ current, goal }: CalorieGoalProgressProps) => {
       </View>
       
       <View style={styles.statsContainer}>
-        <Text style={styles.currentText}>{current} cal</Text>
-        <Text style={styles.goalText}>Goal: {goal} cal</Text>
+        <Text style={[styles.currentText, { color: Colors.text }]}>{current} cal</Text>
+        <Text style={[styles.goalText, { color: Colors.subtext }]}>Goal: {goal} cal</Text>
       </View>
       
       {isOverGoal && (
-        <Text style={styles.overGoalText}>
+        <Text style={[styles.overGoalText, { color: Colors.error }]}>
           You're {current - goal} calories over your daily goal
         </Text>
       )}
@@ -51,12 +52,11 @@ const CalorieGoalProgress = ({ current, goal }: CalorieGoalProgressProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.card,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: Colors.text,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -71,16 +71,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
   },
   percentage: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: Colors.primary,
   },
   progressContainer: {
     height: 12,
-    backgroundColor: Colors.lightGray,
     borderRadius: 6,
     marginBottom: 8,
     overflow: 'hidden',
@@ -96,15 +93,12 @@ const styles = StyleSheet.create({
   currentText: {
     fontSize: 14,
     fontWeight: '500',
-    color: Colors.text,
   },
   goalText: {
     fontSize: 14,
-    color: Colors.subtext,
   },
   overGoalText: {
     fontSize: 14,
-    color: Colors.error,
     marginTop: 8,
     fontWeight: '500',
   },

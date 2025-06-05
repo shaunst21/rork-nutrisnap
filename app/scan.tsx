@@ -4,13 +4,14 @@ import { useRouter } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { Camera, Image as ImageIcon, X, Zap } from 'lucide-react-native';
-import Colors from '@/constants/colors';
 import { processImage } from '@/utils/imageProcessing';
 import FoodConfirmation from '@/components/FoodConfirmation';
 import { useMealStore } from '@/store/mealStore';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function ScanScreen() {
   const router = useRouter();
+  const Colors = useThemeColors();
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -19,6 +20,11 @@ export default function ScanScreen() {
     food: '',
     calories: 0,
     confidence: 0,
+    macros: {
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    }
   });
   
   const { addMeal } = useMealStore();
@@ -48,6 +54,7 @@ export default function ScanScreen() {
         food: result.food,
         calories: result.calories,
         confidence: result.confidence,
+        macros: result.macros
       });
       
       setShowConfirmation(true);
@@ -81,6 +88,7 @@ export default function ScanScreen() {
           food: foodResult.food,
           calories: foodResult.calories,
           confidence: foodResult.confidence,
+          macros: foodResult.macros
         });
         
         setShowConfirmation(true);
@@ -93,7 +101,13 @@ export default function ScanScreen() {
     }
   };
   
-  const handleConfirm = async (food: string, calories: number, mealType: string, notes: string) => {
+  const handleConfirm = async (
+    food: string, 
+    calories: number, 
+    mealType: string, 
+    notes: string,
+    macros: { protein: number; carbs: number; fat: number; }
+  ) => {
     try {
       await addMeal({
         food,
@@ -101,6 +115,7 @@ export default function ScanScreen() {
         method: 'scan',
         mealType: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
         notes: notes || undefined,
+        macros
       });
       
       setShowConfirmation(false);
@@ -117,12 +132,12 @@ export default function ScanScreen() {
   
   if (!permission?.granted) {
     return (
-      <View style={styles.permissionContainer}>
-        <Text style={styles.permissionText}>
+      <View style={[styles.permissionContainer, { backgroundColor: Colors.background }]}>
+        <Text style={[styles.permissionText, { color: Colors.text }]}>
           We need camera permission to scan your food
         </Text>
         <TouchableOpacity
-          style={styles.permissionButton}
+          style={[styles.permissionButton, { backgroundColor: Colors.primary }]}
           onPress={requestPermission}
         >
           <Text style={styles.permissionButtonText}>Grant Permission</Text>
@@ -204,6 +219,7 @@ export default function ScanScreen() {
             food={detectedFood.food}
             calories={detectedFood.calories}
             confidence={detectedFood.confidence}
+            macros={detectedFood.macros}
             onConfirm={handleConfirm}
             onCancel={handleCancel}
           />
@@ -216,6 +232,7 @@ export default function ScanScreen() {
             food={detectedFood.food}
             calories={detectedFood.calories}
             confidence={detectedFood.confidence}
+            macros={detectedFood.macros}
             onConfirm={handleConfirm}
             onCancel={handleCancel}
           />
@@ -367,7 +384,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   permissionButton: {
-    backgroundColor: Colors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,

@@ -1,9 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Camera, Clock, Trash2, Coffee, Sun, Moon, Cookie } from 'lucide-react-native';
-import Colors from '@/constants/colors';
 import { deleteMeal } from '@/firebase';
 import { Meal } from '@/types';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface MealCardProps {
   id: string;
@@ -13,10 +13,26 @@ interface MealCardProps {
   method: 'scan' | 'manual';
   mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   notes?: string;
+  macros?: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
   onDelete?: () => void;
 }
 
-const MealCard = ({ id, food, calories, date, method, mealType, notes, onDelete }: MealCardProps) => {
+const MealCard = ({ 
+  id, 
+  food, 
+  calories, 
+  date, 
+  method, 
+  mealType, 
+  notes, 
+  macros,
+  onDelete 
+}: MealCardProps) => {
+  const Colors = useThemeColors();
   const formattedDate = new Date(date).toLocaleString();
   
   const handleDelete = () => {
@@ -69,26 +85,40 @@ const MealCard = ({ id, food, calories, date, method, mealType, notes, onDelete 
   };
   
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: Colors.card }]}>
       <View style={styles.header}>
-        <Text style={styles.foodName}>{food}</Text>
+        <Text style={[styles.foodName, { color: Colors.text }]}>{food}</Text>
         <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
           <Trash2 size={18} color={Colors.error} />
         </TouchableOpacity>
       </View>
       
-      <Text style={styles.calories}>{calories} calories</Text>
+      <Text style={[styles.calories, { color: Colors.primary }]}>{calories} calories</Text>
       
-      {notes && <Text style={styles.notes}>{notes}</Text>}
+      {macros && (
+        <View style={styles.macrosContainer}>
+          <Text style={[styles.macroText, { color: Colors.macros.protein }]}>
+            Protein: {macros.protein}g
+          </Text>
+          <Text style={[styles.macroText, { color: Colors.macros.carbs }]}>
+            Carbs: {macros.carbs}g
+          </Text>
+          <Text style={[styles.macroText, { color: Colors.macros.fat }]}>
+            Fat: {macros.fat}g
+          </Text>
+        </View>
+      )}
+      
+      {notes && <Text style={[styles.notes, { color: Colors.subtext }]}>{notes}</Text>}
       
       <View style={styles.footer}>
         <View style={styles.methodContainer}>
           {method === 'scan' ? (
             <Camera size={16} color={Colors.primary} />
           ) : (
-            <Text style={styles.manualIcon}>M</Text>
+            <Text style={[styles.manualIcon, { color: Colors.primary }]}>M</Text>
           )}
-          <Text style={styles.methodText}>
+          <Text style={[styles.methodText, { color: Colors.subtext }]}>
             {method === 'scan' ? 'Scanned' : 'Manual'}
           </Text>
         </View>
@@ -104,7 +134,7 @@ const MealCard = ({ id, food, calories, date, method, mealType, notes, onDelete 
         
         <View style={styles.timeContainer}>
           <Clock size={16} color={Colors.subtext} />
-          <Text style={styles.timeText}>{formattedDate}</Text>
+          <Text style={[styles.timeText, { color: Colors.subtext }]}>{formattedDate}</Text>
         </View>
       </View>
     </View>
@@ -113,12 +143,11 @@ const MealCard = ({ id, food, calories, date, method, mealType, notes, onDelete 
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: Colors.card,
     borderRadius: 12,
     padding: 16,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowColor: Colors.text,
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -133,7 +162,6 @@ const styles = StyleSheet.create({
   foodName: {
     fontSize: 18,
     fontWeight: '600',
-    color: Colors.text,
     flex: 1,
   },
   deleteButton: {
@@ -142,12 +170,22 @@ const styles = StyleSheet.create({
   calories: {
     fontSize: 16,
     fontWeight: '500',
-    color: Colors.primary,
     marginBottom: 8,
+  },
+  macrosContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
+  macroText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginRight: 8,
+    marginBottom: 4,
   },
   notes: {
     fontSize: 14,
-    color: Colors.subtext,
     marginBottom: 12,
     fontStyle: 'italic',
   },
@@ -166,13 +204,11 @@ const styles = StyleSheet.create({
   },
   methodText: {
     fontSize: 14,
-    color: Colors.subtext,
     marginLeft: 4,
   },
   manualIcon: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: Colors.primary,
   },
   mealTypeContainer: {
     flexDirection: 'row',
@@ -192,7 +228,6 @@ const styles = StyleSheet.create({
   },
   timeText: {
     fontSize: 14,
-    color: Colors.subtext,
     marginLeft: 4,
   },
 });
