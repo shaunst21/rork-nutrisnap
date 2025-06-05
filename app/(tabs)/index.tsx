@@ -11,9 +11,11 @@ import StatCard from '@/components/StatCard';
 import EmptyState from '@/components/EmptyState';
 import CalorieGoalProgress from '@/components/CalorieGoalProgress';
 import SubscriptionBanner from '@/components/SubscriptionBanner';
+import MoreMenu from '@/components/MoreMenu';
 import { checkAndUpdateStreak } from '@/utils/streakHelpers';
 import { formatDate } from '@/utils/dateHelpers';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { Stack } from 'expo-router';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -70,92 +72,99 @@ export default function HomeScreen() {
   };
   
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: Colors.background }]}
-      contentContainerStyle={styles.contentContainer}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      <View style={styles.header}>
-        <Text style={[styles.greeting, { color: Colors.text }]}>Hello!</Text>
-        <Text style={[styles.subtitle, { color: Colors.subtext }]}>Track your nutrition today</Text>
-      </View>
-      
-      {/* Premium Banner */}
-      {showPremiumBanner && <SubscriptionBanner />}
-      
-      {/* Calorie Goal Progress */}
-      <CalorieGoalProgress 
-        current={todayCalories} 
-        goal={preferences.dailyCalorieGoal} 
+    <>
+      <Stack.Screen 
+        options={{
+          headerRight: () => <MoreMenu />
+        }}
       />
-      
-      <View style={styles.statsContainer}>
-        <StatCard
-          title="Today's Calories"
-          value={todayCalories}
-          icon={<TrendingUp size={24} color={Colors.primary} />}
-        />
-        
-        <StatCard
-          title="Current Streak"
-          value={`${currentStreak} day${currentStreak !== 1 ? 's' : ''}`}
-          icon={<Award size={24} color={Colors.accent} />}
-          color={Colors.accent}
-        />
-      </View>
-      
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity 
-          style={[styles.actionButton, { backgroundColor: Colors.card }]} 
-          onPress={handleScan}
-        >
-          <View style={[styles.actionIcon, { backgroundColor: Colors.primary }]}>
-            <Camera size={24} color="#FFFFFF" />
-          </View>
-          <Text style={[styles.actionText, { color: Colors.text }]}>Scan Food</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.actionButton, { backgroundColor: Colors.card }]} 
-          onPress={handleManualEntry}
-        >
-          <View style={[styles.actionIcon, { backgroundColor: Colors.secondary }]}>
-            <Plus size={24} color="#FFFFFF" />
-          </View>
-          <Text style={[styles.actionText, { color: Colors.text }]}>Add Manually</Text>
-        </TouchableOpacity>
-      </View>
-      
-      <View style={styles.mealsSection}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Today's Meals</Text>
-          <Text style={[styles.dateText, { color: Colors.subtext }]}>{formatDate(new Date())}</Text>
+      <ScrollView
+        style={[styles.container, { backgroundColor: Colors.background }]}
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.header}>
+          <Text style={[styles.greeting, { color: Colors.text }]}>Hello!</Text>
+          <Text style={[styles.subtitle, { color: Colors.subtext }]}>Track your nutrition today</Text>
         </View>
         
-        {todayMeals.length === 0 ? (
-          <EmptyState 
-            message="No meals logged today. Start by scanning a meal or adding one manually."
-            icon={<Camera size={40} color={Colors.mediumGray} />}
+        {/* Premium Banner */}
+        {showPremiumBanner && <SubscriptionBanner />}
+        
+        {/* Calorie Goal Progress */}
+        <CalorieGoalProgress 
+          current={todayCalories} 
+          goal={preferences.dailyCalorieGoal} 
+        />
+        
+        <View style={styles.statsContainer}>
+          <StatCard
+            title="Today's Calories"
+            value={todayCalories}
+            icon={<TrendingUp size={24} color={Colors.primary} />}
           />
-        ) : (
-          todayMeals.map(meal => (
-            <MealCard
-              key={meal.id}
-              id={meal.id || ''}
-              food={meal.food}
-              calories={meal.calories}
-              date={meal.date}
-              method={meal.method}
-              mealType={meal.mealType}
-              notes={meal.notes}
-              onDelete={loadData}
+          
+          <StatCard
+            title="Current Streak"
+            value={`${currentStreak} day${currentStreak !== 1 ? 's' : ''}`}
+            icon={<Award size={24} color={Colors.accent} />}
+            color={Colors.accent}
+          />
+        </View>
+        
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: Colors.card }]} 
+            onPress={handleScan}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: Colors.primary }]}>
+              <Camera size={24} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.actionText, { color: Colors.text }]}>Scan Food</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.actionButton, { backgroundColor: Colors.card }]} 
+            onPress={handleManualEntry}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: Colors.secondary }]}>
+              <Plus size={24} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.actionText, { color: Colors.text }]}>Add Manually</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.mealsSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: Colors.text }]}>Today's Meals</Text>
+            <Text style={[styles.dateText, { color: Colors.subtext }]}>{formatDate(new Date())}</Text>
+          </View>
+          
+          {todayMeals.length === 0 ? (
+            <EmptyState 
+              message="No meals logged today. Start by scanning a meal or adding one manually."
+              icon={<Camera size={40} color={Colors.mediumGray} />}
             />
-          ))
-        )}
-      </View>
-    </ScrollView>
+          ) : (
+            todayMeals.map(meal => (
+              <MealCard
+                key={meal.id}
+                id={meal.id || ''}
+                food={meal.food}
+                calories={meal.calories}
+                date={meal.date}
+                method={meal.method}
+                mealType={meal.mealType}
+                notes={meal.notes}
+                onDelete={loadData}
+              />
+            ))
+          )}
+        </View>
+      </ScrollView>
+    </>
   );
 }
 

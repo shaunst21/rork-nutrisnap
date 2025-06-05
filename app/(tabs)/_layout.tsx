@@ -4,8 +4,8 @@ import {
   Home, 
   BarChart2, 
   Calendar, 
-  BookOpen, 
-  Crown
+  Camera,
+  Settings
 } from 'lucide-react-native';
 import { useMealStore } from '@/store/mealStore';
 import { useStatsStore } from '@/store/statsStore';
@@ -64,17 +64,17 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="recipes"
+        name="scan"
         options={{
-          title: 'Recipes',
-          tabBarIcon: ({ color }) => <BookOpen size={24} color={color} />,
+          title: 'Scan',
+          tabBarIcon: ({ color }) => <Camera size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="premium"
+        name="settings"
         options={{
-          title: 'Premium',
-          tabBarIcon: ({ color }) => <Crown size={24} color={color} />,
+          title: 'Settings',
+          tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
         }}
       />
     </Tabs>
