@@ -15,4 +15,14 @@ export default {
   lightGray: '#E0E0E0',
   mediumGray: '#9E9E9E',
   darkGray: '#616161',
+  
+  // New color additions
+  mealTypes: {
+    breakfast: '#FF9E80', // Soft orange
+    lunch: '#FFD180', // Light amber
+    dinner: '#B388FF', // Soft purple
+    snack: '#80D8FF', // Light blue
+  },
+  goalMet: '#CCFF90', // Light green
+  goalNotMet: '#FF8A80', // Light red
 };

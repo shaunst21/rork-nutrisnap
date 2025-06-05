@@ -1,21 +1,27 @@
 import { getMeals } from '../firebase';
+import { 
+  startOfDay, 
+  endOfDay, 
+  startOfWeek, 
+  endOfWeek, 
+  startOfMonth, 
+  endOfMonth,
+  getDaysOfWeek
+} from './dateHelpers';
 
 // Get total calories for a specific date
 export const getCaloriesForDate = async (date: string): Promise<number> => {
   try {
-    // Get start and end of day
-    const startDate = new Date(date);
-    startDate.setHours(0, 0, 0, 0);
-    
-    const endDate = new Date(date);
-    endDate.setHours(23, 59, 59, 999);
+    const dateObj = new Date(date);
+    const start = startOfDay(dateObj);
+    const end = endOfDay(dateObj);
     
     const meals = await getMeals();
     
     // Filter meals for the specific date
     const mealsForDate = meals.filter((meal: any) => {
       const mealDate = new Date(meal.date);
-      return mealDate >= startDate && mealDate <= endDate;
+      return mealDate >= start && mealDate <= end;
     });
     
     // Sum calories
@@ -32,16 +38,15 @@ export const getCaloriesForDate = async (date: string): Promise<number> => {
 export const getCaloriesForWeek = async (): Promise<number> => {
   try {
     const today = new Date();
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
-    startOfWeek.setHours(0, 0, 0, 0);
+    const start = startOfWeek(today);
+    const end = endOfWeek(today);
     
     const meals = await getMeals();
     
     // Filter meals for the current week
     const mealsForWeek = meals.filter((meal: any) => {
       const mealDate = new Date(meal.date);
-      return mealDate >= startOfWeek && mealDate <= today;
+      return mealDate >= start && mealDate <= end;
     });
     
     // Sum calories
@@ -54,18 +59,61 @@ export const getCaloriesForWeek = async (): Promise<number> => {
   }
 };
 
+// Get calories for each day of the current week
+export const getCaloriesPerDayForWeek = async (): Promise<Array<{day: string, calories: number}>> => {
+  try {
+    const today = new Date();
+    const start = startOfWeek(today);
+    const days = getDaysOfWeek();
+    
+    const meals = await getMeals();
+    
+    // Initialize result array with 0 calories for each day
+    const result = days.map(day => ({ day, calories: 0 }));
+    
+    // Calculate calories for each day
+    for (let i = 0; i < 7; i++) {
+      const dayStart = new Date(start);
+      dayStart.setDate(dayStart.getDate() + i);
+      dayStart.setHours(0, 0, 0, 0);
+      
+      const dayEnd = new Date(dayStart);
+      dayEnd.setHours(23, 59, 59, 999);
+      
+      // Filter meals for this day
+      const mealsForDay = meals.filter((meal: any) => {
+        const mealDate = new Date(meal.date);
+        return mealDate >= dayStart && mealDate <= dayEnd;
+      });
+      
+      // Sum calories
+      const calories = mealsForDay.reduce((total: number, meal: any) => {
+        return total + (meal.calories || 0);
+      }, 0);
+      
+      result[i].calories = calories;
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('Error getting calories per day for week:', error);
+    return getDaysOfWeek().map(day => ({ day, calories: 0 }));
+  }
+};
+
 // Get total calories for the current month
 export const getCaloriesForMonth = async (): Promise<number> => {
   try {
     const today = new Date();
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const start = startOfMonth(today);
+    const end = endOfMonth(today);
     
     const meals = await getMeals();
     
     // Filter meals for the current month
     const mealsForMonth = meals.filter((meal: any) => {
       const mealDate = new Date(meal.date);
-      return mealDate >= startOfMonth && mealDate <= today;
+      return mealDate >= start && mealDate <= end;
     });
     
     // Sum calories
@@ -102,6 +150,66 @@ export const getMostCommonFoods = async (limit: number = 5): Promise<Array<{food
   } catch (error) {
     console.error('Error getting most common foods:', error);
     return [];
+  }
+};
+
+// Get calories by meal type for today
+export const getCaloriesByMealType = async (): Promise<{
+  breakfast: number;
+  lunch: number;
+  dinner: number;
+  snack: number;
+  other: number;
+}> => {
+  try {
+    const today = new Date();
+    const start = startOfDay(today);
+    const end = endOfDay(today);
+    
+    const meals = await getMeals();
+    
+    // Filter meals for today
+    const mealsForToday = meals.filter((meal: any) => {
+      const mealDate = new Date(meal.date);
+      return mealDate >= start && mealDate <= end;
+    });
+    
+    // Initialize result
+    const result = {
+      breakfast: 0,
+      lunch: 0,
+      dinner: 0,
+      snack: 0,
+      other: 0
+    };
+    
+    // Sum calories by meal type
+    mealsForToday.forEach((meal: any) => {
+      const calories = meal.calories || 0;
+      
+      if (meal.mealType === 'breakfast') {
+        result.breakfast += calories;
+      } else if (meal.mealType === 'lunch') {
+        result.lunch += calories;
+      } else if (meal.mealType === 'dinner') {
+        result.dinner += calories;
+      } else if (meal.mealType === 'snack') {
+        result.snack += calories;
+      } else {
+        result.other += calories;
+      }
+    });
+    
+    return result;
+  } catch (error) {
+    console.error('Error getting calories by meal type:', error);
+    return {
+      breakfast: 0,
+      lunch: 0,
+      dinner: 0,
+      snack: 0,
+      other: 0
+    };
   }
 };
 
@@ -142,7 +250,9 @@ export const getAverageDailyCalories = async (): Promise<number> => {
 export default {
   getCaloriesForDate,
   getCaloriesForWeek,
+  getCaloriesPerDayForWeek,
   getCaloriesForMonth,
   getMostCommonFoods,
+  getCaloriesByMealType,
   getAverageDailyCalories
 };

@@ -2,12 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { Check, X, Edit2 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
+import MealTypeSelector from './MealTypeSelector';
 
 interface FoodConfirmationProps {
   food: string;
   calories: number;
   confidence: number;
-  onConfirm: (food: string, calories: number) => void;
+  onConfirm: (food: string, calories: number, mealType: string, notes: string) => void;
   onCancel: () => void;
 }
 
@@ -20,6 +21,8 @@ const FoodConfirmation = ({
 }: FoodConfirmationProps) => {
   const [food, setFood] = useState(initialFood);
   const [calories, setCalories] = useState(initialCalories.toString());
+  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
+  const [notes, setNotes] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   
   const handleConfirm = () => {
@@ -30,7 +33,7 @@ const FoodConfirmation = ({
       return;
     }
     
-    onConfirm(food, caloriesNum);
+    onConfirm(food, caloriesNum, mealType, notes);
   };
   
   const toggleEdit = () => {
@@ -62,6 +65,22 @@ const FoodConfirmation = ({
               onChangeText={setCalories}
               placeholder="Calories"
               keyboardType="number-pad"
+            />
+            
+            <Text style={styles.label}>Meal Type:</Text>
+            <MealTypeSelector
+              selectedType={mealType}
+              onSelect={setMealType}
+            />
+            
+            <Text style={styles.label}>Notes (Optional):</Text>
+            <TextInput
+              style={[styles.input, styles.notesInput]}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Add any notes about this meal"
+              multiline
+              numberOfLines={3}
             />
           </View>
         ) : (
@@ -161,6 +180,10 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     marginBottom: 16,
+  },
+  notesInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
   buttonContainer: {
     alignItems: 'center',

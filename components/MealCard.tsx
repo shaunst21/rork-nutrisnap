@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
-import { Camera, Clock, Trash2 } from 'lucide-react-native';
+import { Camera, Clock, Trash2, Coffee, Sun, Moon, Cookie } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { deleteMeal } from '@/firebase';
+import { Meal } from '@/types';
 
 interface MealCardProps {
   id: string;
@@ -10,10 +11,12 @@ interface MealCardProps {
   calories: number;
   date: string;
   method: 'scan' | 'manual';
+  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  notes?: string;
   onDelete?: () => void;
 }
 
-const MealCard = ({ id, food, calories, date, method, onDelete }: MealCardProps) => {
+const MealCard = ({ id, food, calories, date, method, mealType, notes, onDelete }: MealCardProps) => {
   const formattedDate = new Date(date).toLocaleString();
   
   const handleDelete = () => {
@@ -44,6 +47,27 @@ const MealCard = ({ id, food, calories, date, method, onDelete }: MealCardProps)
     );
   };
   
+  // Get meal type icon
+  const getMealTypeIcon = () => {
+    if (!mealType) return null;
+    
+    const iconSize = 16;
+    const iconColor = Colors.mealTypes[mealType];
+    
+    switch (mealType) {
+      case 'breakfast':
+        return <Coffee size={iconSize} color={iconColor} />;
+      case 'lunch':
+        return <Sun size={iconSize} color={iconColor} />;
+      case 'dinner':
+        return <Moon size={iconSize} color={iconColor} />;
+      case 'snack':
+        return <Cookie size={iconSize} color={iconColor} />;
+      default:
+        return null;
+    }
+  };
+  
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -54,6 +78,8 @@ const MealCard = ({ id, food, calories, date, method, onDelete }: MealCardProps)
       </View>
       
       <Text style={styles.calories}>{calories} calories</Text>
+      
+      {notes && <Text style={styles.notes}>{notes}</Text>}
       
       <View style={styles.footer}>
         <View style={styles.methodContainer}>
@@ -66,6 +92,15 @@ const MealCard = ({ id, food, calories, date, method, onDelete }: MealCardProps)
             {method === 'scan' ? 'Scanned' : 'Manual'}
           </Text>
         </View>
+        
+        {mealType && (
+          <View style={styles.mealTypeContainer}>
+            {getMealTypeIcon()}
+            <Text style={[styles.mealTypeText, { color: Colors.mealTypes[mealType] }]}>
+              {mealType.charAt(0).toUpperCase() + mealType.slice(1)}
+            </Text>
+          </View>
+        )}
         
         <View style={styles.timeContainer}>
           <Clock size={16} color={Colors.subtext} />
@@ -108,17 +143,26 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     color: Colors.primary,
+    marginBottom: 8,
+  },
+  notes: {
+    fontSize: 14,
+    color: Colors.subtext,
     marginBottom: 12,
+    fontStyle: 'italic',
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: 8,
+    flexWrap: 'wrap',
   },
   methodContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginRight: 8,
+    marginBottom: 4,
   },
   methodText: {
     fontSize: 14,
@@ -130,9 +174,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: Colors.primary,
   },
+  mealTypeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginRight: 8,
+    marginBottom: 4,
+  },
+  mealTypeText: {
+    fontSize: 14,
+    marginLeft: 4,
+    fontWeight: '500',
+  },
   timeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 4,
   },
   timeText: {
     fontSize: 14,

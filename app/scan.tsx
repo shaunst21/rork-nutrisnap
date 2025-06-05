@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Modal, Platform, Alert } from
 import { useRouter } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
-import { Camera, Image as ImageIcon, X } from 'lucide-react-native';
+import { Camera, Image as ImageIcon, X, Zap } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { processImage } from '@/utils/imageProcessing';
 import FoodConfirmation from '@/components/FoodConfirmation';
@@ -93,12 +93,14 @@ export default function ScanScreen() {
     }
   };
   
-  const handleConfirm = async (food: string, calories: number) => {
+  const handleConfirm = async (food: string, calories: number, mealType: string, notes: string) => {
     try {
       await addMeal({
         food,
         calories,
         method: 'scan',
+        mealType: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
+        notes: notes || undefined,
       });
       
       setShowConfirmation(false);
@@ -157,7 +159,18 @@ export default function ScanScreen() {
             <View style={[styles.scanCorner, styles.topRight]} />
             <View style={[styles.scanCorner, styles.bottomLeft]} />
             <View style={[styles.scanCorner, styles.bottomRight]} />
+            
+            {isProcessing && (
+              <View style={styles.processingOverlay}>
+                <Zap size={32} color="#FFFFFF" />
+                <Text style={styles.processingText}>Analyzing food...</Text>
+              </View>
+            )}
           </View>
+          
+          <Text style={styles.instructionText}>
+            Position your food in the frame and tap the button to scan
+          </Text>
           
           <View style={styles.footer}>
             <TouchableOpacity
@@ -283,6 +296,30 @@ const styles = StyleSheet.create({
     borderLeftWidth: 0,
     borderBottomWidth: 3,
     borderRightWidth: 3,
+  },
+  processingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  processingText: {
+    color: '#FFFFFF',
+    marginTop: 12,
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  instructionText: {
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontSize: 14,
+    marginHorizontal: 32,
+    marginBottom: 20,
   },
   footer: {
     flexDirection: 'row',

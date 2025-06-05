@@ -5,10 +5,15 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import { StatusBar } from "expo-status-bar";
 import Colors from "@/constants/colors";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { trpc, trpcClient } from "@/lib/trpc";
 
 export const unstable_settings = {
   initialRouteName: "(tabs)",
 };
+
+// Create a client
+const queryClient = new QueryClient();
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -42,38 +47,42 @@ function RootLayoutNav() {
   return (
     <>
       <StatusBar style="dark" />
-      <Stack
-        screenOptions={{
-          headerStyle: {
-            backgroundColor: Colors.background,
-          },
-          headerTintColor: Colors.text,
-          headerTitleStyle: {
-            fontWeight: 'bold',
-          },
-          contentStyle: {
-            backgroundColor: Colors.background,
-          },
-        }}
-      >
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="scan" 
-          options={{ 
-            title: "Scan Food",
-            presentation: "modal",
-            headerTitleAlign: "center",
-          }} 
-        />
-        <Stack.Screen 
-          name="manual-entry" 
-          options={{ 
-            title: "Add Food",
-            presentation: "modal",
-            headerTitleAlign: "center",
-          }} 
-        />
-      </Stack>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <Stack
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: Colors.background,
+              },
+              headerTintColor: Colors.text,
+              headerTitleStyle: {
+                fontWeight: 'bold',
+              },
+              contentStyle: {
+                backgroundColor: Colors.background,
+              },
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="scan" 
+              options={{ 
+                title: "Scan Food",
+                presentation: "modal",
+                headerTitleAlign: "center",
+              }} 
+            />
+            <Stack.Screen 
+              name="manual-entry" 
+              options={{ 
+                title: "Add Food",
+                presentation: "modal",
+                headerTitleAlign: "center",
+              }} 
+            />
+          </Stack>
+        </QueryClientProvider>
+      </trpc.Provider>
     </>
   );
 }

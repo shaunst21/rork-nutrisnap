@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Camera, Plus, TrendingUp, Award } from 'lucide-react-native';
+import { Camera, Plus, TrendingUp, Award, Target } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useMealStore } from '@/store/mealStore';
 import { useStatsStore } from '@/store/statsStore';
+import { usePreferencesStore } from '@/store/preferencesStore';
 import MealCard from '@/components/MealCard';
 import StatCard from '@/components/StatCard';
 import EmptyState from '@/components/EmptyState';
+import CalorieGoalProgress from '@/components/CalorieGoalProgress';
 import { checkAndUpdateStreak } from '@/utils/streakHelpers';
+import { formatDate } from '@/utils/dateHelpers';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -21,6 +24,7 @@ export default function HomeScreen() {
     longestStreak,
     fetchStats 
   } = useStatsStore();
+  const { preferences } = usePreferencesStore();
   
   // Get today's meals
   const todayMeals = meals.filter(meal => {
@@ -71,6 +75,12 @@ export default function HomeScreen() {
         <Text style={styles.subtitle}>Track your nutrition today</Text>
       </View>
       
+      {/* Calorie Goal Progress */}
+      <CalorieGoalProgress 
+        current={todayCalories} 
+        goal={preferences.dailyCalorieGoal} 
+      />
+      
       <View style={styles.statsContainer}>
         <StatCard
           title="Today's Calories"
@@ -103,7 +113,10 @@ export default function HomeScreen() {
       </View>
       
       <View style={styles.mealsSection}>
-        <Text style={styles.sectionTitle}>Today's Meals</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Today's Meals</Text>
+          <Text style={styles.dateText}>{formatDate(new Date())}</Text>
+        </View>
         
         {todayMeals.length === 0 ? (
           <EmptyState 
@@ -119,6 +132,8 @@ export default function HomeScreen() {
               calories={meal.calories}
               date={meal.date}
               method={meal.method}
+              mealType={meal.mealType}
+              notes={meal.notes}
               onDelete={loadData}
             />
           ))
@@ -188,11 +203,20 @@ const styles = StyleSheet.create({
   mealsSection: {
     marginTop: 16,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: Colors.text,
-    marginHorizontal: 16,
-    marginBottom: 8,
+  },
+  dateText: {
+    fontSize: 14,
+    color: Colors.subtext,
   },
 });

@@ -14,11 +14,14 @@ import { useRouter } from 'expo-router';
 import { Check, X } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useMealStore } from '@/store/mealStore';
+import MealTypeSelector from '@/components/MealTypeSelector';
 
 export default function ManualEntryScreen() {
   const router = useRouter();
   const [food, setFood] = useState('');
   const [calories, setCalories] = useState('');
+  const [notes, setNotes] = useState('');
+  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { addMeal } = useMealStore();
@@ -43,6 +46,8 @@ export default function ManualEntryScreen() {
         food: food.trim(),
         calories: caloriesNum,
         method: 'manual',
+        mealType,
+        notes: notes.trim() || undefined,
       });
       
       router.back();
@@ -91,6 +96,22 @@ export default function ManualEntryScreen() {
             placeholder="e.g. 350"
             placeholderTextColor={Colors.mediumGray}
             keyboardType="number-pad"
+          />
+          
+          <MealTypeSelector 
+            selectedType={mealType}
+            onSelect={setMealType}
+          />
+          
+          <Text style={styles.label}>Notes (Optional)</Text>
+          <TextInput
+            style={[styles.input, styles.notesInput]}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="e.g. With dressing on the side"
+            placeholderTextColor={Colors.mediumGray}
+            multiline
+            numberOfLines={3}
           />
           
           <TouchableOpacity
@@ -161,6 +182,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 16,
     color: Colors.text,
+  },
+  notesInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
   submitButton: {
     backgroundColor: Colors.primary,

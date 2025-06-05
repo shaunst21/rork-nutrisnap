@@ -8,14 +8,7 @@ import {
   syncOfflineData 
 } from '@/firebase';
 import { updateStreak } from '@/utils/streakHelpers';
-
-interface Meal {
-  id?: string;
-  food: string;
-  calories: number;
-  date: string;
-  method: 'scan' | 'manual';
-}
+import { Meal } from '@/types';
 
 interface MealState {
   meals: Meal[];

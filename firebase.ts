@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
+import { Meal, StreakData } from '@/types';
 
 // Mock Firebase implementation since we can't actually connect to Firebase
 // In a real app, this would be replaced with actual Firebase initialization
@@ -125,23 +126,23 @@ class MockFirestore {
 const firestore = new MockFirestore();
 
 // Helper functions for common operations
-export const getMeals = async () => {
+export const getMeals = async (): Promise<Meal[]> => {
   return await firestore.getCollection('users/CalorieLens/meals');
 };
 
-export const addMeal = async (mealData: any) => {
+export const addMeal = async (mealData: Omit<Meal, 'id'>): Promise<Meal> => {
   return await firestore.addDocument('users/CalorieLens/meals', mealData);
 };
 
-export const updateMeal = async (id: string, mealData: any) => {
+export const updateMeal = async (id: string, mealData: Partial<Meal>): Promise<Meal> => {
   return await firestore.updateDocument('users/CalorieLens/meals', id, mealData);
 };
 
-export const deleteMeal = async (id: string) => {
+export const deleteMeal = async (id: string): Promise<boolean> => {
   return await firestore.deleteDocument('users/CalorieLens/meals', id);
 };
 
-export const getMealsForDate = async (date: string) => {
+export const getMealsForDate = async (date: string): Promise<Meal[]> => {
   // Get start and end of day
   const startDate = new Date(date);
   startDate.setHours(0, 0, 0, 0);
@@ -155,7 +156,7 @@ export const getMealsForDate = async (date: string) => {
   ]);
 };
 
-export const getStreakData = async () => {
+export const getStreakData = async (): Promise<StreakData> => {
   try {
     const data = await AsyncStorage.getItem('streak_data');
     return data ? JSON.parse(data) : {
@@ -173,7 +174,7 @@ export const getStreakData = async () => {
   }
 };
 
-export const updateStreakData = async (streakData: any) => {
+export const updateStreakData = async (streakData: StreakData): Promise<StreakData> => {
   try {
     await AsyncStorage.setItem('streak_data', JSON.stringify(streakData));
     return streakData;
@@ -184,14 +185,14 @@ export const updateStreakData = async (streakData: any) => {
 };
 
 // Check if device is online
-export const isOnline = () => {
+export const isOnline = (): boolean => {
   // In a real app, this would check network connectivity
   // For this mock, we'll assume online on iOS and offline on Android for testing
   return Platform.OS === 'ios';
 };
 
 // Sync offline data when back online
-export const syncOfflineData = async () => {
+export const syncOfflineData = async (): Promise<void> => {
   try {
     const offlineData = await AsyncStorage.getItem('offline_meals');
     

@@ -1,6 +1,6 @@
 import React from "react";
 import { Tabs } from "expo-router";
-import { Home, History, BarChart3, Camera, PlusCircle } from "lucide-react-native";
+import { Home, History, BarChart3, Camera, PlusCircle, Settings } from "lucide-react-native";
 import Colors from "@/constants/colors";
 import { TouchableOpacity, View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
@@ -92,6 +92,14 @@ export default function TabLayout() {
         options={{
           title: "Stats",
           tabBarIcon: ({ color }) => <BarChart3 size={24} color={color} />,
+        }}
+      />
+      
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: "Settings",
+          tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
         }}
       />
     </Tabs>

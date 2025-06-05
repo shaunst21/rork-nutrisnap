@@ -3,19 +3,23 @@ import {
   getCaloriesForDate, 
   getCaloriesForWeek, 
   getCaloriesForMonth,
+  getCaloriesPerDayForWeek,
   getMostCommonFoods,
+  getCaloriesByMealType,
   getAverageDailyCalories
 } from '@/utils/calorieHelpers';
 import { getStreakData } from '@/firebase';
+import { Stats } from '@/types';
 
-interface StatsState {
-  todayCalories: number;
-  weekCalories: number;
-  monthCalories: number;
-  averageDailyCalories: number;
-  commonFoods: Array<{food: string, count: number}>;
-  currentStreak: number;
-  longestStreak: number;
+interface StatsState extends Stats {
+  weeklyCalorieData: Array<{day: string, calories: number}>;
+  mealTypeCalories: {
+    breakfast: number;
+    lunch: number;
+    dinner: number;
+    snack: number;
+    other: number;
+  };
   isLoading: boolean;
   error: string | null;
   fetchStats: () => Promise<void>;
@@ -29,6 +33,14 @@ export const useStatsStore = create<StatsState>((set) => ({
   commonFoods: [],
   currentStreak: 0,
   longestStreak: 0,
+  weeklyCalorieData: [],
+  mealTypeCalories: {
+    breakfast: 0,
+    lunch: 0,
+    dinner: 0,
+    snack: 0,
+    other: 0
+  },
   isLoading: false,
   error: null,
   
@@ -42,6 +54,8 @@ export const useStatsStore = create<StatsState>((set) => ({
         todayCalories,
         weekCalories,
         monthCalories,
+        weeklyCalorieData,
+        mealTypeCalories,
         averageDailyCalories,
         commonFoods,
         streakData
@@ -49,6 +63,8 @@ export const useStatsStore = create<StatsState>((set) => ({
         getCaloriesForDate(today),
         getCaloriesForWeek(),
         getCaloriesForMonth(),
+        getCaloriesPerDayForWeek(),
+        getCaloriesByMealType(),
         getAverageDailyCalories(),
         getMostCommonFoods(5),
         getStreakData()
@@ -58,6 +74,8 @@ export const useStatsStore = create<StatsState>((set) => ({
         todayCalories,
         weekCalories,
         monthCalories,
+        weeklyCalorieData,
+        mealTypeCalories,
         averageDailyCalories,
         commonFoods,
         currentStreak: streakData.currentStreak,
