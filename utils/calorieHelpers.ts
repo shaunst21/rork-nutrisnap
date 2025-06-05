@@ -282,9 +282,9 @@ export const getMacrosForDate = async (date: string): Promise<{
     
     mealsForDate.forEach((meal: any) => {
       if (meal.macros) {
-        result.protein += meal.macros.protein || 0;
-        result.carbs += meal.macros.carbs || 0;
-        result.fat += meal.macros.fat || 0;
+        result.protein += meal.macros.protein ?? 0;
+        result.carbs += meal.macros.carbs ?? 0;
+        result.fat += meal.macros.fat ?? 0;
       }
     });
     
@@ -323,9 +323,9 @@ export const getMacrosForWeek = async (): Promise<{
     
     mealsForWeek.forEach((meal: any) => {
       if (meal.macros) {
-        result.protein += meal.macros.protein || 0;
-        result.carbs += meal.macros.carbs || 0;
-        result.fat += meal.macros.fat || 0;
+        result.protein += meal.macros.protein ?? 0;
+        result.carbs += meal.macros.carbs ?? 0;
+        result.fat += meal.macros.fat ?? 0;
       }
     });
     
@@ -364,9 +364,9 @@ export const getMacrosForMonth = async (): Promise<{
     
     mealsForMonth.forEach((meal: any) => {
       if (meal.macros) {
-        result.protein += meal.macros.protein || 0;
-        result.carbs += meal.macros.carbs || 0;
-        result.fat += meal.macros.fat || 0;
+        result.protein += meal.macros.protein ?? 0;
+        result.carbs += meal.macros.carbs ?? 0;
+        result.fat += meal.macros.fat ?? 0;
       }
     });
     

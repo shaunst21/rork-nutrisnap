@@ -104,9 +104,23 @@ export const useStatsStore = create<StatsState>((set) => ({
       ]);
       
       // Ensure we have valid macro objects with defaults
-      const safeTodayMacros = todayMacros || { ...defaultMacros };
-      const safeWeekMacros = weekMacros || { ...defaultMacros };
-      const safeMonthMacros = monthMacros || { ...defaultMacros };
+      const safeTodayMacros = {
+        protein: todayMacros?.protein ?? 0,
+        carbs: todayMacros?.carbs ?? 0,
+        fat: todayMacros?.fat ?? 0
+      };
+      
+      const safeWeekMacros = {
+        protein: weekMacros?.protein ?? 0,
+        carbs: weekMacros?.carbs ?? 0,
+        fat: weekMacros?.fat ?? 0
+      };
+      
+      const safeMonthMacros = {
+        protein: monthMacros?.protein ?? 0,
+        carbs: monthMacros?.carbs ?? 0,
+        fat: monthMacros?.fat ?? 0
+      };
       
       set({
         todayCalories,
@@ -119,21 +133,9 @@ export const useStatsStore = create<StatsState>((set) => ({
         currentStreak: streakData?.currentStreak || 0,
         longestStreak: streakData?.longestStreak || 0,
         macros: {
-          today: {
-            protein: safeTodayMacros.protein || 0,
-            carbs: safeTodayMacros.carbs || 0,
-            fat: safeTodayMacros.fat || 0
-          },
-          week: {
-            protein: safeWeekMacros.protein || 0,
-            carbs: safeWeekMacros.carbs || 0,
-            fat: safeWeekMacros.fat || 0
-          },
-          month: {
-            protein: safeMonthMacros.protein || 0,
-            carbs: safeMonthMacros.carbs || 0,
-            fat: safeMonthMacros.fat || 0
-          }
+          today: safeTodayMacros,
+          week: safeWeekMacros,
+          month: safeMonthMacros
         },
         isLoading: false
       });

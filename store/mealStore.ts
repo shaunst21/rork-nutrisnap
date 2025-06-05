@@ -21,23 +21,12 @@ interface MealState {
 
 // Ensure meal macros are always defined with defaults
 const ensureMealMacros = (meal: any): Meal => {
-  if (!meal.macros) {
-    return {
-      ...meal,
-      macros: {
-        protein: 0,
-        carbs: 0,
-        fat: 0
-      }
-    };
-  }
-  
   return {
     ...meal,
     macros: {
-      protein: meal.macros.protein || 0,
-      carbs: meal.macros.carbs || 0,
-      fat: meal.macros.fat || 0
+      protein: meal.macros?.protein ?? 0,
+      carbs: meal.macros?.carbs ?? 0,
+      fat: meal.macros?.fat ?? 0
     }
   };
 };
@@ -68,7 +57,11 @@ export const useMealStore = create<MealState>()(
           // Ensure macros are defined
           const mealWithMacros = {
             ...mealData,
-            macros: mealData.macros || { protein: 0, carbs: 0, fat: 0 }
+            macros: {
+              protein: mealData.macros?.protein ?? 0,
+              carbs: mealData.macros?.carbs ?? 0,
+              fat: mealData.macros?.fat ?? 0
+            }
           };
           
           const newMeal = {

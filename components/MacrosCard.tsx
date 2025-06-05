@@ -13,14 +13,14 @@ interface MacrosCardProps {
   title: string;
 }
 
-const MacrosCard = ({ macros = { protein: 0, carbs: 0, fat: 0 }, title }: MacrosCardProps) => {
+const MacrosCard = ({ macros, title }: MacrosCardProps) => {
   const Colors = useThemeColors();
   const { preferences } = usePreferencesStore();
   
   // Ensure macros has valid values with defaults
-  const safeProtein = macros?.protein || 0;
-  const safeCarbs = macros?.carbs || 0;
-  const safeFat = macros?.fat || 0;
+  const safeProtein = macros?.protein ?? 0;
+  const safeCarbs = macros?.carbs ?? 0;
+  const safeFat = macros?.fat ?? 0;
   
   // Calculate calories from macros
   const proteinCalories = safeProtein * 4;
