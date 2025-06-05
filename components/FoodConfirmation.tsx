@@ -8,11 +8,17 @@ interface FoodConfirmationProps {
   food: string;
   calories: number;
   confidence: number;
+  macros?: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
   onConfirm: (
     food: string, 
     calories: number, 
     mealType: string, 
-    notes: string
+    notes: string,
+    macros?: { protein: number; carbs: number; fat: number; }
   ) => void;
   onCancel: () => void;
 }
@@ -21,6 +27,7 @@ const FoodConfirmation = ({
   food: initialFood, 
   calories: initialCalories, 
   confidence,
+  macros: initialMacros,
   onConfirm, 
   onCancel 
 }: FoodConfirmationProps) => {
@@ -31,6 +38,11 @@ const FoodConfirmation = ({
   const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
   const [notes, setNotes] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [macros, setMacros] = useState({
+    protein: initialMacros?.protein.toString() || '0',
+    carbs: initialMacros?.carbs.toString() || '0',
+    fat: initialMacros?.fat.toString() || '0'
+  });
   
   const handleConfirm = () => {
     const caloriesNum = parseInt(calories, 10);
@@ -40,7 +52,18 @@ const FoodConfirmation = ({
       return;
     }
     
-    onConfirm(food, caloriesNum, mealType, notes);
+    // Parse macros
+    const proteinNum = parseInt(macros.protein, 10) || 0;
+    const carbsNum = parseInt(macros.carbs, 10) || 0;
+    const fatNum = parseInt(macros.fat, 10) || 0;
+    
+    onConfirm(
+      food, 
+      caloriesNum, 
+      mealType, 
+      notes, 
+      { protein: proteinNum, carbs: carbsNum, fat: fatNum }
+    );
   };
   
   const toggleEdit = () => {
@@ -93,6 +116,63 @@ const FoodConfirmation = ({
                 placeholderTextColor={Colors.mediumGray}
               />
               
+              <Text style={[styles.label, { color: Colors.subtext }]}>Macros:</Text>
+              <View style={styles.macrosContainer}>
+                <View style={styles.macroItem}>
+                  <Text style={[styles.macroLabel, { color: Colors.subtext }]}>Protein (g)</Text>
+                  <TextInput
+                    style={[
+                      styles.macroInput, 
+                      { 
+                        backgroundColor: Colors.card,
+                        borderColor: Colors.border,
+                        color: Colors.text
+                      }
+                    ]}
+                    value={macros.protein}
+                    onChangeText={(value) => setMacros({...macros, protein: value})}
+                    keyboardType="number-pad"
+                    placeholderTextColor={Colors.mediumGray}
+                  />
+                </View>
+                
+                <View style={styles.macroItem}>
+                  <Text style={[styles.macroLabel, { color: Colors.subtext }]}>Carbs (g)</Text>
+                  <TextInput
+                    style={[
+                      styles.macroInput, 
+                      { 
+                        backgroundColor: Colors.card,
+                        borderColor: Colors.border,
+                        color: Colors.text
+                      }
+                    ]}
+                    value={macros.carbs}
+                    onChangeText={(value) => setMacros({...macros, carbs: value})}
+                    keyboardType="number-pad"
+                    placeholderTextColor={Colors.mediumGray}
+                  />
+                </View>
+                
+                <View style={styles.macroItem}>
+                  <Text style={[styles.macroLabel, { color: Colors.subtext }]}>Fat (g)</Text>
+                  <TextInput
+                    style={[
+                      styles.macroInput, 
+                      { 
+                        backgroundColor: Colors.card,
+                        borderColor: Colors.border,
+                        color: Colors.text
+                      }
+                    ]}
+                    value={macros.fat}
+                    onChangeText={(value) => setMacros({...macros, fat: value})}
+                    keyboardType="number-pad"
+                    placeholderTextColor={Colors.mediumGray}
+                  />
+                </View>
+              </View>
+              
               <Text style={[styles.label, { color: Colors.subtext }]}>Meal Type:</Text>
               <MealTypeSelector
                 selectedType={mealType}
@@ -122,6 +202,29 @@ const FoodConfirmation = ({
             <View style={styles.detailsContainer}>
               <Text style={[styles.foodName, { color: Colors.text }]}>{food}</Text>
               <Text style={[styles.calories, { color: Colors.primary }]}>{calories} calories</Text>
+              
+              {initialMacros && (
+                <View style={styles.macrosSummary}>
+                  <View style={styles.macroSummaryItem}>
+                    <Text style={[styles.macroValue, { color: Colors.text }]}>
+                      {initialMacros.protein}g
+                    </Text>
+                    <Text style={[styles.macroName, { color: Colors.subtext }]}>Protein</Text>
+                  </View>
+                  <View style={styles.macroSummaryItem}>
+                    <Text style={[styles.macroValue, { color: Colors.text }]}>
+                      {initialMacros.carbs}g
+                    </Text>
+                    <Text style={[styles.macroName, { color: Colors.subtext }]}>Carbs</Text>
+                  </View>
+                  <View style={styles.macroSummaryItem}>
+                    <Text style={[styles.macroValue, { color: Colors.text }]}>
+                      {initialMacros.fat}g
+                    </Text>
+                    <Text style={[styles.macroName, { color: Colors.subtext }]}>Fat</Text>
+                  </View>
+                </View>
+              )}
             </View>
           )}
           
@@ -205,6 +308,24 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 12,
   },
+  macrosSummary: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 8,
+  },
+  macroSummaryItem: {
+    alignItems: 'center',
+    padding: 8,
+  },
+  macroValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  macroName: {
+    fontSize: 14,
+    marginTop: 4,
+  },
   editContainer: {
     marginVertical: 16,
   },
@@ -222,6 +343,25 @@ const styles = StyleSheet.create({
   notesInput: {
     minHeight: 80,
     textAlignVertical: 'top',
+  },
+  macrosContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  macroItem: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  macroLabel: {
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  macroInput: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 10,
+    fontSize: 14,
   },
   buttonContainer: {
     alignItems: 'center',

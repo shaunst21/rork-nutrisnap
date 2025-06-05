@@ -1,13 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { Camera, X, Image } from 'lucide-react-native';
+import { Camera, X, Image as ImageIcon } from 'lucide-react-native';
 import { useMealStore } from '@/store/mealStore';
 import FoodConfirmation from '@/components/FoodConfirmation';
 import { processImage } from '@/utils/imageProcessing';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { Platform } from 'react-native';
 
 export default function ScanScreen() {
   const router = useRouter();
@@ -22,6 +21,11 @@ export default function ScanScreen() {
     food: string;
     calories: number;
     confidence: number;
+    macros?: {
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
   } | null>(null);
   
   const cameraRef = useRef<any>(null);
@@ -34,32 +38,40 @@ export default function ScanScreen() {
   }, []);
   
   const handleCapture = async () => {
-    if (isCapturing || isProcessing) return;
+    if (isCapturing || isProcessing || !cameraRef.current) return;
     
     setIsCapturing(true);
     
     try {
-      // Simulate taking a photo since we can't actually capture in this environment
-      setIsProcessing(true);
-      setIsCapturing(false);
-      
-      // Mock image URI
-      const mockImageUri = 'https://example.com/mock-food-image.jpg';
-      setCapturedImage(mockImageUri);
-      
-      // Process the image to detect food
-      const result = await processImage(mockImageUri);
-      
-      setDetectedFood({
-        food: result.food,
-        calories: result.calories,
-        confidence: result.confidence
-      });
-      
+      if (Platform.OS === 'web') {
+        // For web, we'll use a mock image since camera capture is limited on web
+        setIsProcessing(true);
+        const mockImageUri = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1760&q=80';
+        setCapturedImage(mockImageUri);
+        
+        // Process the image to detect food
+        const result = await processImage(mockImageUri);
+        setDetectedFood(result);
+      } else {
+        // For native platforms, capture an actual photo
+        const photo = await cameraRef.current.takePictureAsync({
+          quality: 0.7,
+          base64: true,
+          exif: false
+        });
+        
+        setCapturedImage(photo.uri);
+        setIsProcessing(true);
+        
+        // Process the image to detect food
+        const result = await processImage(photo.uri, photo.base64);
+        setDetectedFood(result);
+      }
     } catch (error) {
       console.error('Error capturing image:', error);
-      Alert.alert('Error', 'Failed to capture image. Please try again.');
+      Alert.alert('Error', 'Failed to capture or process image. Please try again.');
     } finally {
+      setIsCapturing(false);
       setIsProcessing(false);
     }
   };
@@ -68,7 +80,8 @@ export default function ScanScreen() {
     food: string, 
     calories: number, 
     mealType: string, 
-    notes: string
+    notes: string,
+    macros?: { protein: number; carbs: number; fat: number; }
   ) => {
     try {
       await addMeal({
@@ -77,7 +90,8 @@ export default function ScanScreen() {
         method: 'scan',
         mealType: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
         notes: notes || undefined,
-        image: capturedImage || undefined
+        image: capturedImage || undefined,
+        macros
       });
       
       router.back();
@@ -127,6 +141,7 @@ export default function ScanScreen() {
           food={detectedFood.food}
           calories={detectedFood.calories}
           confidence={detectedFood.confidence}
+          macros={detectedFood.macros}
           onConfirm={handleConfirm}
           onCancel={handleCancel}
         />
@@ -180,7 +195,7 @@ export default function ScanScreen() {
               {isCapturing || isProcessing ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Image size={24} color="#FFFFFF" />
+                <ImageIcon size={24} color="#FFFFFF" />
               )}
               <Text style={styles.captureButtonText}>
                 {isProcessing ? 'Processing...' : 'Capture Food'}
