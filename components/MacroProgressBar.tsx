@@ -7,34 +7,32 @@ interface MacroProgressBarProps {
   current: number;
   goal: number;
   color: string;
+  unit?: string;
 }
 
-const MacroProgressBar = ({ label, current, goal, color }: MacroProgressBarProps) => {
+const MacroProgressBar = ({ label, current, goal, color, unit = 'g' }: MacroProgressBarProps) => {
   const Colors = useThemeColors();
-  
-  // Calculate percentage with safety check
-  const percentage = goal > 0 ? Math.min(100, (current / goal) * 100) : 0;
+  const percentage = Math.min(Math.round((current / goal) * 100), 100);
   
   return (
     <View style={styles.container}>
-      <View style={styles.labelContainer}>
+      <View style={styles.header}>
         <Text style={[styles.label, { color: Colors.text }]}>{label}</Text>
-        <Text style={[styles.values, { color: Colors.subtext }]}>
-          {current}g / {goal}g
+        <Text style={[styles.values, { color: Colors.text }]}>
+          {current.toFixed(1)}{unit} / {goal}{unit}
         </Text>
       </View>
       
-      <View style={[styles.progressBackground, { backgroundColor: Colors.border }]}>
+      <View style={[styles.progressContainer, { backgroundColor: Colors.lightGray }]}>
         <View 
           style={[
-            styles.progressFill, 
-            { 
-              width: `${percentage}%`, 
-              backgroundColor: color 
-            }
+            styles.progressBar, 
+            { width: `${percentage}%`, backgroundColor: color }
           ]} 
         />
       </View>
+      
+      <Text style={[styles.percentage, { color: Colors.subtext }]}>{percentage}%</Text>
     </View>
   );
 };
@@ -43,9 +41,10 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 12,
   },
-  labelContainer: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 4,
   },
   label: {
@@ -55,13 +54,19 @@ const styles = StyleSheet.create({
   values: {
     fontSize: 14,
   },
-  progressBackground: {
+  progressContainer: {
     height: 8,
     borderRadius: 4,
+    marginBottom: 2,
     overflow: 'hidden',
   },
-  progressFill: {
+  progressBar: {
     height: '100%',
+    borderRadius: 4,
+  },
+  percentage: {
+    fontSize: 12,
+    textAlign: 'right',
   },
 });
 

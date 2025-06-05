@@ -10,6 +10,7 @@ import MealCard from '@/components/MealCard';
 import StatCard from '@/components/StatCard';
 import EmptyState from '@/components/EmptyState';
 import CalorieGoalProgress from '@/components/CalorieGoalProgress';
+import MacrosCard from '@/components/MacrosCard';
 import SubscriptionBanner from '@/components/SubscriptionBanner';
 import { checkAndUpdateStreak } from '@/utils/streakHelpers';
 import { formatDate } from '@/utils/dateHelpers';
@@ -25,6 +26,7 @@ export default function HomeScreen() {
     todayCalories, 
     currentStreak, 
     longestStreak,
+    macros,
     fetchStats 
   } = useStatsStore();
   const { preferences } = usePreferencesStore();
@@ -91,6 +93,12 @@ export default function HomeScreen() {
         goal={preferences.dailyCalorieGoal} 
       />
       
+      {/* Macros Card */}
+      <MacrosCard 
+        macros={macros.today}
+        title="Today's Macros"
+      />
+      
       <View style={styles.statsContainer}>
         <StatCard
           title="Today's Calories"
@@ -150,6 +158,7 @@ export default function HomeScreen() {
               method={meal.method}
               mealType={meal.mealType}
               notes={meal.notes}
+              macros={meal.macros}
               onDelete={loadData}
             />
           ))

@@ -22,9 +22,7 @@ import {
   Dumbbell,
   Crown,
   CreditCard,
-  LogOut,
-  Users,
-  Gift
+  LogOut
 } from 'lucide-react-native';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -44,10 +42,7 @@ export default function SettingsScreen() {
     updateAutoRenew, 
     isSubscriptionActive, 
     getSubscriptionTier,
-    getRemainingDays,
-    isTrialAvailable,
-    restorePurchases,
-    isLoading
+    getRemainingDays
   } = useSubscriptionStore();
   
   const [dailyGoal, setDailyGoal] = useState(preferences.dailyCalorieGoal.toString());
@@ -61,7 +56,6 @@ export default function SettingsScreen() {
   const currentTier = getSubscriptionTier();
   const isActive = isSubscriptionActive();
   const remainingDays = getRemainingDays();
-  const canTrial = isTrialAvailable();
   
   const handleSaveGoals = () => {
     const dailyGoalNum = parseInt(dailyGoal, 10);
@@ -157,26 +151,6 @@ export default function SettingsScreen() {
     );
   };
   
-  const handleManageFamilyPlan = () => {
-    router.push('/family-plan');
-  };
-  
-  const handleRestorePurchases = async () => {
-    const restored = await restorePurchases();
-    
-    if (restored) {
-      Alert.alert(
-        'Purchases Restored',
-        'Your previous subscription has been restored successfully.'
-      );
-    } else {
-      Alert.alert(
-        'No Purchases Found',
-        'We couldn\'t find any previous purchases to restore.'
-      );
-    }
-  };
-  
   const clearAllData = () => {
     Alert.alert(
       'Clear All Data',
@@ -216,20 +190,10 @@ export default function SettingsScreen() {
           
           <View style={[styles.subscriptionCard, { backgroundColor: Colors.card }]}>
             <View style={styles.subscriptionHeader}>
-              {currentTier === 'family' ? (
-                <Users size={24} color={Colors.secondary} />
-              ) : (
-                <Crown size={24} color={Colors.accent} />
-              )}
+              <Crown size={24} color={Colors.accent} />
               <Text style={[styles.subscriptionTitle, { color: Colors.text }]}>
-                {currentTier === 'premium' ? 'Premium' : 
-                 currentTier === 'premium_plus' ? 'Premium Plus' : 'Family Plan'}
+                {currentTier === 'premium' ? 'Premium' : 'Premium Plus'}
               </Text>
-              {subscription?.isTrial && (
-                <View style={[styles.trialBadge, { backgroundColor: Colors.secondary }]}>
-                  <Text style={styles.trialBadgeText}>TRIAL</Text>
-                </View>
-              )}
             </View>
             
             <View style={styles.subscriptionDetails}>
@@ -254,18 +218,6 @@ export default function SettingsScreen() {
               </View>
             </View>
             
-            {currentTier === 'family' && (
-              <TouchableOpacity 
-                style={[styles.manageFamilyButton, { backgroundColor: Colors.secondary }]}
-                onPress={handleManageFamilyPlan}
-              >
-                <Users size={16} color="#FFFFFF" />
-                <Text style={styles.manageFamilyButtonText}>
-                  Manage Family Plan
-                </Text>
-              </TouchableOpacity>
-            )}
-            
             <TouchableOpacity 
               style={[styles.cancelButton, { borderColor: Colors.error }]}
               onPress={handleCancelSubscription}
@@ -283,42 +235,11 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionTitle, { color: Colors.text }]}>Subscription</Text>
           
           <TouchableOpacity 
-            style={[
-              styles.premiumButton, 
-              { backgroundColor: canTrial ? Colors.secondary : Colors.primary }
-            ]}
+            style={[styles.premiumButton, { backgroundColor: Colors.primary }]}
             onPress={() => router.push('/premium')}
           >
-            {canTrial ? (
-              <>
-                <Gift size={20} color="#FFFFFF" />
-                <Text style={styles.premiumButtonText}>Start 7-Day Free Trial</Text>
-              </>
-            ) : (
-              <>
-                <Crown size={20} color="#FFFFFF" />
-                <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
-              </>
-            )}
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[styles.restoreButton, { borderColor: Colors.border }]}
-            onPress={handleRestorePurchases}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Text style={[styles.restoreButtonText, { color: Colors.primary }]}>
-                Restoring...
-              </Text>
-            ) : (
-              <>
-                <RefreshCw size={16} color={Colors.primary} />
-                <Text style={[styles.restoreButtonText, { color: Colors.primary }]}>
-                  Restore Purchases
-                </Text>
-              </>
-            )}
+            <Crown size={20} color="#FFFFFF" />
+            <Text style={styles.premiumButtonText}>Upgrade to Premium</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -681,43 +602,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
   },
-  manageFamilyButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-  },
-  manageFamilyButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 8,
-  },
   premiumButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 8,
     padding: 12,
-    marginBottom: 12,
   },
   premiumButtonText: {
     color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
-    marginLeft: 8,
-  },
-  restoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: 8,
-    padding: 12,
-    borderWidth: 1,
-  },
-  restoreButtonText: {
     fontSize: 16,
     fontWeight: '500',
     marginLeft: 8,
@@ -731,16 +624,5 @@ const styles = StyleSheet.create({
   accountButtonText: {
     fontSize: 16,
     marginLeft: 12,
-  },
-  trialBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 8,
-  },
-  trialBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: 'bold',
   },
 });

@@ -13,6 +13,11 @@ interface MealCardProps {
   method: 'scan' | 'manual';
   mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   notes?: string;
+  macros?: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
   onDelete?: () => void;
 }
 
@@ -23,7 +28,8 @@ const MealCard = ({
   date, 
   method, 
   mealType, 
-  notes,
+  notes, 
+  macros,
   onDelete 
 }: MealCardProps) => {
   const Colors = useThemeColors();
@@ -89,6 +95,20 @@ const MealCard = ({
       
       <Text style={[styles.calories, { color: Colors.primary }]}>{calories} calories</Text>
       
+      {macros && (
+        <View style={styles.macrosContainer}>
+          <Text style={[styles.macroText, { color: Colors.macros.protein }]}>
+            Protein: {macros.protein}g
+          </Text>
+          <Text style={[styles.macroText, { color: Colors.macros.carbs }]}>
+            Carbs: {macros.carbs}g
+          </Text>
+          <Text style={[styles.macroText, { color: Colors.macros.fat }]}>
+            Fat: {macros.fat}g
+          </Text>
+        </View>
+      )}
+      
       {notes && <Text style={[styles.notes, { color: Colors.subtext }]}>{notes}</Text>}
       
       <View style={styles.footer}>
@@ -151,6 +171,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginBottom: 8,
+  },
+  macrosContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+    flexWrap: 'wrap',
+  },
+  macroText: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginRight: 8,
+    marginBottom: 4,
   },
   notes: {
     fontSize: 14,

@@ -8,11 +8,17 @@ interface FoodConfirmationProps {
   food: string;
   calories: number;
   confidence: number;
+  macros?: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
   onConfirm: (
     food: string, 
     calories: number, 
     mealType: string, 
-    notes: string
+    notes: string, 
+    macros: { protein: number; carbs: number; fat: number; }
   ) => void;
   onCancel: () => void;
 }
@@ -20,7 +26,8 @@ interface FoodConfirmationProps {
 const FoodConfirmation = ({ 
   food: initialFood, 
   calories: initialCalories, 
-  confidence,
+  confidence, 
+  macros: initialMacros = { protein: 0, carbs: 0, fat: 0 },
   onConfirm, 
   onCancel 
 }: FoodConfirmationProps) => {
@@ -32,6 +39,11 @@ const FoodConfirmation = ({
   const [notes, setNotes] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   
+  // Macros state
+  const [protein, setProtein] = useState(initialMacros.protein.toString());
+  const [carbs, setCarbs] = useState(initialMacros.carbs.toString());
+  const [fat, setFat] = useState(initialMacros.fat.toString());
+  
   const handleConfirm = () => {
     const caloriesNum = parseInt(calories, 10);
     
@@ -40,7 +52,18 @@ const FoodConfirmation = ({
       return;
     }
     
-    onConfirm(food, caloriesNum, mealType, notes);
+    // Parse macros
+    const proteinNum = parseFloat(protein) || 0;
+    const carbsNum = parseFloat(carbs) || 0;
+    const fatNum = parseFloat(fat) || 0;
+    
+    onConfirm(
+      food, 
+      caloriesNum, 
+      mealType, 
+      notes, 
+      { protein: proteinNum, carbs: carbsNum, fat: fatNum }
+    );
   };
   
   const toggleEdit = () => {
@@ -93,6 +116,63 @@ const FoodConfirmation = ({
                 placeholderTextColor={Colors.mediumGray}
               />
               
+              <Text style={[styles.label, { color: Colors.subtext }]}>Macros:</Text>
+              <View style={styles.macrosInputContainer}>
+                <View style={styles.macroInputGroup}>
+                  <Text style={[styles.macroLabel, { color: Colors.macros.protein }]}>Protein (g)</Text>
+                  <TextInput
+                    style={[
+                      styles.macroInput, 
+                      { 
+                        backgroundColor: Colors.card,
+                        borderColor: Colors.border,
+                        color: Colors.text
+                      }
+                    ]}
+                    value={protein}
+                    onChangeText={setProtein}
+                    keyboardType="decimal-pad"
+                    placeholderTextColor={Colors.mediumGray}
+                  />
+                </View>
+                
+                <View style={styles.macroInputGroup}>
+                  <Text style={[styles.macroLabel, { color: Colors.macros.carbs }]}>Carbs (g)</Text>
+                  <TextInput
+                    style={[
+                      styles.macroInput, 
+                      { 
+                        backgroundColor: Colors.card,
+                        borderColor: Colors.border,
+                        color: Colors.text
+                      }
+                    ]}
+                    value={carbs}
+                    onChangeText={setCarbs}
+                    keyboardType="decimal-pad"
+                    placeholderTextColor={Colors.mediumGray}
+                  />
+                </View>
+                
+                <View style={styles.macroInputGroup}>
+                  <Text style={[styles.macroLabel, { color: Colors.macros.fat }]}>Fat (g)</Text>
+                  <TextInput
+                    style={[
+                      styles.macroInput, 
+                      { 
+                        backgroundColor: Colors.card,
+                        borderColor: Colors.border,
+                        color: Colors.text
+                      }
+                    ]}
+                    value={fat}
+                    onChangeText={setFat}
+                    keyboardType="decimal-pad"
+                    placeholderTextColor={Colors.mediumGray}
+                  />
+                </View>
+              </View>
+              
               <Text style={[styles.label, { color: Colors.subtext }]}>Meal Type:</Text>
               <MealTypeSelector
                 selectedType={mealType}
@@ -122,6 +202,18 @@ const FoodConfirmation = ({
             <View style={styles.detailsContainer}>
               <Text style={[styles.foodName, { color: Colors.text }]}>{food}</Text>
               <Text style={[styles.calories, { color: Colors.primary }]}>{calories} calories</Text>
+              
+              <View style={styles.macrosDisplay}>
+                <Text style={[styles.macroValue, { color: Colors.macros.protein }]}>
+                  Protein: {initialMacros.protein}g
+                </Text>
+                <Text style={[styles.macroValue, { color: Colors.macros.carbs }]}>
+                  Carbs: {initialMacros.carbs}g
+                </Text>
+                <Text style={[styles.macroValue, { color: Colors.macros.fat }]}>
+                  Fat: {initialMacros.fat}g
+                </Text>
+              </View>
             </View>
           )}
           
@@ -205,6 +297,16 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 12,
   },
+  macrosDisplay: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginTop: 8,
+  },
+  macroValue: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
   editContainer: {
     marginVertical: 16,
   },
@@ -218,6 +320,28 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     marginBottom: 16,
+  },
+  macrosInputContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  macroInputGroup: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  macroLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  macroInput: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 8,
+    fontSize: 14,
+    textAlign: 'center',
   },
   notesInput: {
     minHeight: 80,

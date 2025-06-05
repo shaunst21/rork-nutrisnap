@@ -1,64 +1,101 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import { Camera, X, Image } from 'lucide-react-native';
-import { useMealStore } from '@/store/mealStore';
-import FoodConfirmation from '@/components/FoodConfirmation';
+import * as ImagePicker from 'expo-image-picker';
+import { Camera, Image as ImageIcon, X, Zap } from 'lucide-react-native';
 import { processImage } from '@/utils/imageProcessing';
+import FoodConfirmation from '@/components/FoodConfirmation';
+import { useMealStore } from '@/store/mealStore';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { Platform } from 'react-native';
 
 export default function ScanScreen() {
   const router = useRouter();
   const Colors = useThemeColors();
-  
   const [permission, requestPermission] = useCameraPermissions();
   const [facing, setFacing] = useState<CameraType>('back');
-  const [isCapturing, setIsCapturing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [detectedFood, setDetectedFood] = useState<{
-    food: string;
-    calories: number;
-    confidence: number;
-  } | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [detectedFood, setDetectedFood] = useState({
+    food: '',
+    calories: 0,
+    confidence: 0,
+    macros: {
+      protein: 0,
+      carbs: 0,
+      fat: 0
+    }
+  });
   
-  const cameraRef = useRef<any>(null);
   const { addMeal } = useMealStore();
   
   useEffect(() => {
-    if (!permission?.granted) {
-      requestPermission();
-    }
+    requestPermission();
   }, []);
   
-  const handleCapture = async () => {
-    if (isCapturing || isProcessing) return;
+  const toggleCameraFacing = () => {
+    setFacing(current => (current === 'back' ? 'front' : 'back'));
+  };
+  
+  const takePicture = async () => {
+    if (isProcessing) return;
     
-    setIsCapturing(true);
+    setIsProcessing(true);
     
     try {
-      // Simulate taking a photo since we can't actually capture in this environment
-      setIsProcessing(true);
-      setIsCapturing(false);
+      // In a real app, we would use the camera to take a picture
+      // Since we can't actually take a picture in this mock, we'll simulate it
+      const mockImageUri = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c';
       
-      // Mock image URI
-      const mockImageUri = 'https://example.com/mock-food-image.jpg';
-      setCapturedImage(mockImageUri);
-      
-      // Process the image to detect food
+      // Process the image
       const result = await processImage(mockImageUri);
       
       setDetectedFood({
         food: result.food,
         calories: result.calories,
-        confidence: result.confidence
+        confidence: result.confidence,
+        macros: result.macros
       });
       
+      setShowConfirmation(true);
     } catch (error) {
-      console.error('Error capturing image:', error);
-      Alert.alert('Error', 'Failed to capture image. Please try again.');
+      console.error('Error taking picture:', error);
+      Alert.alert('Error', 'Failed to process food image');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+  
+  const pickImage = async () => {
+    if (isProcessing) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 1,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        // Process the selected image
+        const imageUri = result.assets[0].uri;
+        const foodResult = await processImage(imageUri);
+        
+        setDetectedFood({
+          food: foodResult.food,
+          calories: foodResult.calories,
+          confidence: foodResult.confidence,
+          macros: foodResult.macros
+        });
+        
+        setShowConfirmation(true);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to process food image');
     } finally {
       setIsProcessing(false);
     }
@@ -68,7 +105,8 @@ export default function ScanScreen() {
     food: string, 
     calories: number, 
     mealType: string, 
-    notes: string
+    notes: string,
+    macros: { protein: number; carbs: number; fat: number; }
   ) => {
     try {
       await addMeal({
@@ -77,40 +115,28 @@ export default function ScanScreen() {
         method: 'scan',
         mealType: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
         notes: notes || undefined,
-        image: capturedImage || undefined
+        macros
       });
       
+      setShowConfirmation(false);
       router.back();
     } catch (error) {
-      console.error('Error adding meal:', error);
-      Alert.alert('Error', 'Failed to add meal');
+      console.error('Error saving meal:', error);
+      Alert.alert('Error', 'Failed to save meal');
     }
   };
   
   const handleCancel = () => {
-    setCapturedImage(null);
-    setDetectedFood(null);
+    setShowConfirmation(false);
   };
   
-  const toggleCameraFacing = () => {
-    setFacing(current => (current === 'back' ? 'front' : 'back'));
-  };
-  
-  if (!permission) {
+  if (!permission?.granted) {
     return (
-      <View style={[styles.container, { backgroundColor: Colors.background }]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
-      </View>
-    );
-  }
-  
-  if (!permission.granted) {
-    return (
-      <View style={[styles.container, { backgroundColor: Colors.background }]}>
+      <View style={[styles.permissionContainer, { backgroundColor: Colors.background }]}>
         <Text style={[styles.permissionText, { color: Colors.text }]}>
-          We need your permission to use the camera
+          We need camera permission to scan your food
         </Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={[styles.permissionButton, { backgroundColor: Colors.primary }]}
           onPress={requestPermission}
         >
@@ -121,77 +147,96 @@ export default function ScanScreen() {
   }
   
   return (
-    <View style={[styles.container, { backgroundColor: Colors.background }]}>
-      {detectedFood ? (
-        <FoodConfirmation
-          food={detectedFood.food}
-          calories={detectedFood.calories}
-          confidence={detectedFood.confidence}
-          onConfirm={handleConfirm}
-          onCancel={handleCancel}
-        />
-      ) : (
-        <>
+    <View style={styles.container}>
+      <CameraView
+        style={styles.camera}
+        facing={facing}
+      >
+        <View style={styles.overlay}>
           <View style={styles.header}>
-            <TouchableOpacity 
-              style={styles.closeButton} 
+            <TouchableOpacity
+              style={styles.closeButton}
               onPress={() => router.back()}
             >
-              <X size={24} color={Colors.text} />
-            </TouchableOpacity>
-            <Text style={[styles.title, { color: Colors.text }]}>Scan Food</Text>
-            <View style={styles.placeholder} />
-          </View>
-          
-          <View style={styles.cameraContainer}>
-            <CameraView
-              style={styles.camera}
-              facing={facing}
-              ref={cameraRef}
-            >
-              {isProcessing && (
-                <View style={styles.processingOverlay}>
-                  <ActivityIndicator size="large" color="#FFFFFF" />
-                  <Text style={styles.processingText}>Analyzing food...</Text>
-                </View>
-              )}
-              
-              <View style={styles.cameraControls}>
-                <TouchableOpacity 
-                  style={[styles.flipButton, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}
-                  onPress={toggleCameraFacing}
-                >
-                  <Camera size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-            </CameraView>
-          </View>
-          
-          <View style={styles.footer}>
-            <TouchableOpacity 
-              style={[
-                styles.captureButton, 
-                { backgroundColor: Colors.primary },
-                (isCapturing || isProcessing) && styles.disabledButton
-              ]}
-              onPress={handleCapture}
-              disabled={isCapturing || isProcessing}
-            >
-              {isCapturing || isProcessing ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <Image size={24} color="#FFFFFF" />
-              )}
-              <Text style={styles.captureButtonText}>
-                {isProcessing ? 'Processing...' : 'Capture Food'}
-              </Text>
+              <X size={24} color="#FFFFFF" />
             </TouchableOpacity>
             
-            <Text style={[styles.instructions, { color: Colors.subtext }]}>
-              Position your camera so the food is clearly visible in the frame, then tap the button to capture.
-            </Text>
+            <TouchableOpacity
+              style={styles.flipButton}
+              onPress={toggleCameraFacing}
+            >
+              <Camera size={24} color="#FFFFFF" />
+            </TouchableOpacity>
           </View>
-        </>
+          
+          <View style={styles.scanFrame}>
+            <View style={styles.scanCorner} />
+            <View style={[styles.scanCorner, styles.topRight]} />
+            <View style={[styles.scanCorner, styles.bottomLeft]} />
+            <View style={[styles.scanCorner, styles.bottomRight]} />
+            
+            {isProcessing && (
+              <View style={styles.processingOverlay}>
+                <Zap size={32} color="#FFFFFF" />
+                <Text style={styles.processingText}>Analyzing food...</Text>
+              </View>
+            )}
+          </View>
+          
+          <Text style={styles.instructionText}>
+            Position your food in the frame and tap the button to scan
+          </Text>
+          
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.galleryButton}
+              onPress={pickImage}
+              disabled={isProcessing}
+            >
+              <ImageIcon size={24} color="#FFFFFF" />
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.captureButton, isProcessing && styles.disabledButton]}
+              onPress={takePicture}
+              disabled={isProcessing}
+            >
+              <View style={styles.captureButtonInner} />
+            </TouchableOpacity>
+            
+            <View style={styles.placeholder} />
+          </View>
+        </View>
+      </CameraView>
+      
+      {Platform.OS !== 'web' && (
+        <Modal
+          visible={showConfirmation}
+          transparent
+          animationType="fade"
+        >
+          <FoodConfirmation
+            food={detectedFood.food}
+            calories={detectedFood.calories}
+            confidence={detectedFood.confidence}
+            macros={detectedFood.macros}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />
+        </Modal>
+      )}
+      
+      {Platform.OS === 'web' && showConfirmation && (
+        <View style={styles.webConfirmationOverlay}>
+          <FoodConfirmation
+            food={detectedFood.food}
+            calories={detectedFood.calories}
+            confidence={detectedFood.confidence}
+            macros={detectedFood.macros}
+            onConfirm={handleConfirm}
+            onCancel={handleCancel}
+          />
+        </View>
       )}
     </View>
   );
@@ -200,88 +245,143 @@ export default function ScanScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  closeButton: {
-    padding: 8,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  placeholder: {
-    width: 40,
-  },
-  cameraContainer: {
-    flex: 1,
-    overflow: 'hidden',
-    borderRadius: 12,
-    margin: 16,
+    backgroundColor: '#000',
   },
   camera: {
     flex: 1,
   },
-  cameraControls: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'space-between',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  closeButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   flipButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  scanFrame: {
+    width: 250,
+    height: 250,
+    alignSelf: 'center',
+    position: 'relative',
+  },
+  scanCorner: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderColor: '#FFFFFF',
+    borderTopWidth: 3,
+    borderLeftWidth: 3,
+    top: 0,
+    left: 0,
+  },
+  topRight: {
+    right: 0,
+    left: undefined,
+    borderLeftWidth: 0,
+    borderRightWidth: 3,
+  },
+  bottomLeft: {
+    bottom: 0,
+    top: undefined,
+    borderTopWidth: 0,
+    borderBottomWidth: 3,
+  },
+  bottomRight: {
+    bottom: 0,
+    right: 0,
+    top: undefined,
+    left: undefined,
+    borderTopWidth: 0,
+    borderLeftWidth: 0,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
+  },
   processingOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'center',
     alignItems: 'center',
+    borderRadius: 8,
   },
   processingText: {
     color: '#FFFFFF',
-    marginTop: 16,
+    marginTop: 12,
     fontSize: 16,
     fontWeight: '500',
   },
+  instructionText: {
+    color: '#FFFFFF',
+    textAlign: 'center',
+    fontSize: 14,
+    marginHorizontal: 32,
+    marginBottom: 20,
+  },
   footer: {
-    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    paddingBottom: 40,
+  },
+  galleryButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
   captureButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    marginBottom: 16,
+    alignItems: 'center',
+  },
+  captureButtonInner: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#FFFFFF',
   },
   disabledButton: {
-    opacity: 0.7,
+    opacity: 0.5,
   },
-  captureButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+  placeholder: {
+    width: 50,
   },
-  instructions: {
-    textAlign: 'center',
-    fontSize: 14,
+  permissionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
   },
   permissionText: {
     fontSize: 16,
     textAlign: 'center',
-    marginHorizontal: 24,
-    marginBottom: 24,
+    marginBottom: 20,
   },
   permissionButton: {
     paddingVertical: 12,
@@ -292,5 +392,15 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  webConfirmationOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

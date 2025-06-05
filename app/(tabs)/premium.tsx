@@ -6,10 +6,7 @@ import {
   ScrollView, 
   TouchableOpacity, 
   Alert,
-  Image,
-  TextInput,
-  ActivityIndicator,
-  Platform
+  Image
 } from 'react-native';
 import { 
   Crown, 
@@ -18,11 +15,7 @@ import {
   ChevronRight, 
   Star, 
   Zap, 
-  Shield,
-  Users,
-  Gift,
-  Tag,
-  RefreshCw
+  Shield
 } from 'lucide-react-native';
 import { useSubscriptionStore } from '@/store/subscriptionStore';
 import { SubscriptionTier } from '@/types';
@@ -36,30 +29,20 @@ export default function PremiumScreen() {
     setSubscription, 
     isSubscriptionActive, 
     getSubscriptionTier,
-    getRemainingDays,
-    startTrial,
-    isTrialAvailable,
-    applyPromoCode,
-    restorePurchases,
-    isLoading
+    getRemainingDays
   } = useSubscriptionStore();
   
   const [selectedTier, setSelectedTier] = useState<SubscriptionTier>('premium');
-  const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoDiscount, setPromoDiscount] = useState(0);
-  const [showFamilyPlan, setShowFamilyPlan] = useState(false);
   
   const currentTier = getSubscriptionTier();
   const isActive = isSubscriptionActive();
   const remainingDays = getRemainingDays();
-  const canTrial = isTrialAvailable();
   
   const handleSubscribe = () => {
     // In a real app, this would open a payment flow
     Alert.alert(
       'Subscription',
-      `This would start the payment process for ${getPlanName(selectedTier)} subscription.`,
+      `This would start the payment process for ${selectedTier === 'premium' ? 'Premium' : 'Premium Plus'} subscription.`,
       [
         {
           text: 'Cancel',
@@ -78,157 +61,18 @@ export default function PremiumScreen() {
               startDate: now.toISOString(),
               endDate: endDate.toISOString(),
               autoRenew: true,
-              status: 'active',
-              familyMembers: selectedTier === 'family' ? ['you@example.com'] : undefined
+              status: 'active'
             });
-            
-            // Save for restore purchases demo
-            if (Platform.OS !== 'web') {
-              try {
-                const subscriptionData = {
-                  tier: selectedTier,
-                  startDate: now.toISOString(),
-                  endDate: endDate.toISOString(),
-                  autoRenew: true,
-                  status: 'active',
-                  familyMembers: selectedTier === 'family' ? ['you@example.com'] : undefined
-                };
-                AsyncStorage.setItem('previous-subscription', JSON.stringify(subscriptionData));
-              } catch (error) {
-                console.error('Error saving subscription data:', error);
-              }
-            }
-            
-            setPromoApplied(false);
-            setPromoDiscount(0);
-            setPromoCode('');
             
             Alert.alert(
               'Success',
-              `You are now subscribed to ${getPlanName(selectedTier)}!`,
+              `You are now subscribed to ${selectedTier === 'premium' ? 'Premium' : 'Premium Plus'}!`,
               [{ text: 'OK' }]
             );
           },
         },
       ]
     );
-  };
-  
-  const handleStartTrial = () => {
-    if (!canTrial) {
-      Alert.alert('Trial Unavailable', 'You have already used your free trial.');
-      return;
-    }
-    
-    Alert.alert(
-      'Start Free Trial',
-      `Start your 7-day free trial of ${getPlanName(selectedTier)}? No payment required.`,
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Start Trial',
-          onPress: () => {
-            startTrial(selectedTier);
-            Alert.alert(
-              'Trial Started',
-              `Your 7-day free trial of ${getPlanName(selectedTier)} has started. Enjoy!`,
-              [{ text: 'OK' }]
-            );
-          },
-        },
-      ]
-    );
-  };
-  
-  const handleApplyPromo = () => {
-    if (!promoCode.trim()) {
-      Alert.alert('Invalid Code', 'Please enter a valid promo code.');
-      return;
-    }
-    
-    const success = applyPromoCode(promoCode.trim().toUpperCase());
-    
-    if (success) {
-      // For demo purposes, we'll apply a fixed discount
-      setPromoApplied(true);
-      
-      // Determine discount based on the code
-      if (promoCode.toUpperCase() === 'WELCOME25') {
-        setPromoDiscount(25);
-      } else if (promoCode.toUpperCase() === 'SUMMER2025') {
-        setPromoDiscount(30);
-      } else {
-        setPromoDiscount(20); // Default discount
-      }
-      
-      Alert.alert(
-        'Promo Applied',
-        `${promoDiscount}% discount will be applied to your subscription!`
-      );
-    } else {
-      Alert.alert(
-        'Invalid Promo Code',
-        'This promo code is invalid, expired, or has already been used.'
-      );
-      setPromoApplied(false);
-      setPromoDiscount(0);
-    }
-  };
-  
-  const handleRestorePurchases = async () => {
-    const restored = await restorePurchases();
-    
-    if (restored) {
-      Alert.alert(
-        'Purchases Restored',
-        'Your previous subscription has been restored successfully.'
-      );
-    } else {
-      Alert.alert(
-        'No Purchases Found',
-        'We couldn\'t find any previous purchases to restore.'
-      );
-    }
-  };
-  
-  const getPlanName = (tier: SubscriptionTier) => {
-    switch (tier) {
-      case 'premium':
-        return 'Premium';
-      case 'premium_plus':
-        return 'Premium Plus';
-      case 'family':
-        return 'Family Plan';
-      default:
-        return 'Free';
-    }
-  };
-  
-  const getPlanPrice = (tier: SubscriptionTier) => {
-    let basePrice = 0;
-    
-    switch (tier) {
-      case 'premium':
-        basePrice = 4.99;
-        break;
-      case 'premium_plus':
-        basePrice = 9.99;
-        break;
-      case 'family':
-        basePrice = 14.99;
-        break;
-      default:
-        basePrice = 0;
-    }
-    
-    if (promoApplied) {
-      return (basePrice * (1 - promoDiscount / 100)).toFixed(2);
-    }
-    
-    return basePrice.toFixed(2);
   };
   
   const renderFeatureList = (tier: SubscriptionTier) => {
@@ -242,13 +86,6 @@ export default function PremiumScreen() {
             <Text style={[styles.featureText, { color: Colors.text }]}>{feature.name}</Text>
           </View>
         ))}
-        
-        {tier === 'family' && (
-          <View style={styles.featureItem}>
-            <Check size={16} color={Colors.success} />
-            <Text style={[styles.featureText, { color: Colors.text }]}>Share with up to 5 family members</Text>
-          </View>
-        )}
       </View>
     );
   };
@@ -278,7 +115,7 @@ export default function PremiumScreen() {
         <View style={styles.statusHeader}>
           <Crown size={24} color={Colors.accent} />
           <Text style={[styles.statusTitle, { color: Colors.text }]}>
-            {currentTier === 'free' ? 'Free Plan' : getPlanName(currentTier)}
+            {currentTier === 'free' ? 'Free Plan' : currentTier === 'premium' ? 'Premium' : 'Premium Plus'}
           </Text>
         </View>
         
@@ -287,11 +124,6 @@ export default function PremiumScreen() {
             <Text style={[styles.statusText, { color: Colors.text }]}>
               Status: {isActive ? 'Active' : 'Inactive'}
             </Text>
-            {subscription?.isTrial && (
-              <View style={[styles.trialBadge, { backgroundColor: Colors.accent }]}>
-                <Text style={styles.trialBadgeText}>TRIAL</Text>
-              </View>
-            )}
             {remainingDays > 0 && (
               <Text style={[styles.statusText, { color: Colors.text }]}>
                 {remainingDays} days remaining
@@ -316,246 +148,74 @@ export default function PremiumScreen() {
         )}
       </View>
       
-      {/* Restore Purchases */}
-      <TouchableOpacity 
-        style={[styles.restoreButton, { borderColor: Colors.border }]}
-        onPress={handleRestorePurchases}
-        disabled={isLoading}
-      >
-        {isLoading ? (
-          <ActivityIndicator size="small" color={Colors.primary} />
-        ) : (
-          <>
-            <RefreshCw size={16} color={Colors.primary} />
-            <Text style={[styles.restoreButtonText, { color: Colors.primary }]}>
-              Restore Purchases
-            </Text>
-          </>
-        )}
-      </TouchableOpacity>
-      
       {/* Subscription Plans */}
       <View style={styles.plansContainer}>
         <Text style={[styles.plansTitle, { color: Colors.text }]}>Choose Your Plan</Text>
         
-        {/* Plan Type Selector */}
-        <View style={[styles.planTypeSelector, { backgroundColor: Colors.card }]}>
-          <TouchableOpacity 
-            style={[
-              styles.planTypeOption, 
-              !showFamilyPlan && { backgroundColor: Colors.primary }
-            ]}
-            onPress={() => setShowFamilyPlan(false)}
-          >
-            <Text 
-              style={[
-                styles.planTypeText, 
-                { color: !showFamilyPlan ? '#FFFFFF' : Colors.text }
-              ]}
-            >
-              Individual
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={[
-              styles.planTypeOption, 
-              showFamilyPlan && { backgroundColor: Colors.primary }
-            ]}
-            onPress={() => {
-              setShowFamilyPlan(true);
-              setSelectedTier('family');
-            }}
-          >
-            <Text 
-              style={[
-                styles.planTypeText, 
-                { color: showFamilyPlan ? '#FFFFFF' : Colors.text }
-              ]}
-            >
-              Family
-            </Text>
-          </TouchableOpacity>
-        </View>
-        
-        {!showFamilyPlan ? (
-          <>
-            {/* Premium Plan */}
-            <TouchableOpacity 
-              style={[
-                styles.planCard, 
-                { backgroundColor: Colors.card },
-                selectedTier === 'premium' && { borderColor: Colors.primary, borderWidth: 2 }
-              ]}
-              onPress={() => setSelectedTier('premium')}
-            >
-              <View style={styles.planHeader}>
-                <View>
-                  <Text style={[styles.planTitle, { color: Colors.text }]}>Premium</Text>
-                  <View style={styles.priceContainer}>
-                    {promoApplied && (
-                      <Text style={[styles.originalPrice, { color: Colors.subtext }]}>
-                        ${4.99}/month
-                      </Text>
-                    )}
-                    <Text style={[styles.planPrice, { color: Colors.primary }]}>
-                      ${getPlanPrice('premium')}/month
-                    </Text>
-                  </View>
-                </View>
-                {selectedTier === 'premium' && (
-                  <View style={[styles.selectedBadge, { backgroundColor: Colors.primary }]}>
-                    <Check size={16} color="#FFFFFF" />
-                  </View>
-                )}
-              </View>
-              
-              {renderFeatureList('premium')}
-              {renderNotIncludedFeatures('premium')}
-            </TouchableOpacity>
-            
-            {/* Premium Plus Plan */}
-            <TouchableOpacity 
-              style={[
-                styles.planCard, 
-                { backgroundColor: Colors.card },
-                selectedTier === 'premium_plus' && { borderColor: Colors.accent, borderWidth: 2 }
-              ]}
-              onPress={() => setSelectedTier('premium_plus')}
-            >
-              <View style={styles.planHeader}>
-                <View>
-                  <Text style={[styles.planTitle, { color: Colors.text }]}>Premium Plus</Text>
-                  <View style={styles.priceContainer}>
-                    {promoApplied && (
-                      <Text style={[styles.originalPrice, { color: Colors.subtext }]}>
-                        ${9.99}/month
-                      </Text>
-                    )}
-                    <Text style={[styles.planPrice, { color: Colors.accent }]}>
-                      ${getPlanPrice('premium_plus')}/month
-                    </Text>
-                  </View>
-                </View>
-                {selectedTier === 'premium_plus' && (
-                  <View style={[styles.selectedBadge, { backgroundColor: Colors.accent }]}>
-                    <Check size={16} color="#FFFFFF" />
-                  </View>
-                )}
-              </View>
-              
-              <View style={[styles.bestValueBadge, { backgroundColor: Colors.accent }]}>
-                <Text style={styles.bestValueText}>BEST VALUE</Text>
-              </View>
-              
-              {renderFeatureList('premium_plus')}
-            </TouchableOpacity>
-          </>
-        ) : (
-          /* Family Plan */
-          <TouchableOpacity 
-            style={[
-              styles.planCard, 
-              { backgroundColor: Colors.card },
-              selectedTier === 'family' && { borderColor: Colors.secondary, borderWidth: 2 }
-            ]}
-            onPress={() => setSelectedTier('family')}
-          >
-            <View style={styles.planHeader}>
-              <View>
-                <Text style={[styles.planTitle, { color: Colors.text }]}>Family Plan</Text>
-                <View style={styles.priceContainer}>
-                  {promoApplied && (
-                    <Text style={[styles.originalPrice, { color: Colors.subtext }]}>
-                      ${14.99}/month
-                    </Text>
-                  )}
-                  <Text style={[styles.planPrice, { color: Colors.secondary }]}>
-                    ${getPlanPrice('family')}/month
-                  </Text>
-                </View>
-              </View>
-              <View style={[styles.selectedBadge, { backgroundColor: Colors.secondary }]}>
+        {/* Premium Plan */}
+        <TouchableOpacity 
+          style={[
+            styles.planCard, 
+            { backgroundColor: Colors.card },
+            selectedTier === 'premium' && { borderColor: Colors.primary, borderWidth: 2 }
+          ]}
+          onPress={() => setSelectedTier('premium')}
+        >
+          <View style={styles.planHeader}>
+            <View>
+              <Text style={[styles.planTitle, { color: Colors.text }]}>Premium</Text>
+              <Text style={[styles.planPrice, { color: Colors.primary }]}>$4.99/month</Text>
+            </View>
+            {selectedTier === 'premium' && (
+              <View style={[styles.selectedBadge, { backgroundColor: Colors.primary }]}>
                 <Check size={16} color="#FFFFFF" />
               </View>
-            </View>
-            
-            <View style={styles.familyPlanHeader}>
-              <Users size={24} color={Colors.secondary} />
-              <Text style={[styles.familyPlanText, { color: Colors.text }]}>
-                Share with up to 5 family members
-              </Text>
-            </View>
-            
-            {renderFeatureList('premium_plus')}
-          </TouchableOpacity>
-        )}
-        
-        {/* Promo Code */}
-        <View style={[styles.promoContainer, { backgroundColor: Colors.card }]}>
-          <View style={styles.promoHeader}>
-            <Tag size={20} color={Colors.primary} />
-            <Text style={[styles.promoTitle, { color: Colors.text }]}>Promo Code</Text>
+            )}
           </View>
-          <View style={styles.promoInputContainer}>
-            <TextInput
-              style={[styles.promoInput, { 
-                backgroundColor: Colors.background,
-                color: Colors.text,
-                borderColor: Colors.border
-              }]}
-              placeholder="Enter promo code"
-              placeholderTextColor={Colors.subtext}
-              value={promoCode}
-              onChangeText={setPromoCode}
-              autoCapitalize="characters"
-            />
-            <TouchableOpacity 
-              style={[styles.promoButton, { backgroundColor: Colors.primary }]}
-              onPress={handleApplyPromo}
-            >
-              <Text style={styles.promoButtonText}>Apply</Text>
-            </TouchableOpacity>
-          </View>
-          {promoApplied && (
-            <View style={styles.promoApplied}>
-              <Check size={16} color={Colors.success} />
-              <Text style={[styles.promoAppliedText, { color: Colors.success }]}>
-                {promoDiscount}% discount applied!
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-      
-      {/* Free Trial Button */}
-      {canTrial && (
-        <TouchableOpacity 
-          style={[styles.trialButton, { backgroundColor: Colors.secondary }]}
-          onPress={handleStartTrial}
-        >
-          <Gift size={20} color="#FFFFFF" />
-          <Text style={styles.trialButtonText}>
-            Start 7-Day Free Trial
-          </Text>
+          
+          {renderFeatureList('premium')}
+          {renderNotIncludedFeatures('premium')}
         </TouchableOpacity>
-      )}
+        
+        {/* Premium Plus Plan */}
+        <TouchableOpacity 
+          style={[
+            styles.planCard, 
+            { backgroundColor: Colors.card },
+            selectedTier === 'premium_plus' && { borderColor: Colors.accent, borderWidth: 2 }
+          ]}
+          onPress={() => setSelectedTier('premium_plus')}
+        >
+          <View style={styles.planHeader}>
+            <View>
+              <Text style={[styles.planTitle, { color: Colors.text }]}>Premium Plus</Text>
+              <Text style={[styles.planPrice, { color: Colors.accent }]}>$9.99/month</Text>
+            </View>
+            {selectedTier === 'premium_plus' && (
+              <View style={[styles.selectedBadge, { backgroundColor: Colors.accent }]}>
+                <Check size={16} color="#FFFFFF" />
+              </View>
+            )}
+          </View>
+          
+          <View style={[styles.bestValueBadge, { backgroundColor: Colors.accent }]}>
+            <Text style={styles.bestValueText}>BEST VALUE</Text>
+          </View>
+          
+          {renderFeatureList('premium_plus')}
+        </TouchableOpacity>
+      </View>
       
       {/* Subscribe Button */}
       <TouchableOpacity 
         style={[
           styles.subscribeButton, 
-          { 
-            backgroundColor: selectedTier === 'premium' 
-              ? Colors.primary 
-              : selectedTier === 'family'
-                ? Colors.secondary
-                : Colors.accent
-          }
+          { backgroundColor: selectedTier === 'premium' ? Colors.primary : Colors.accent }
         ]}
         onPress={handleSubscribe}
       >
         <Text style={styles.subscribeButtonText}>
-          Subscribe to {getPlanName(selectedTier)}
+          Subscribe to {selectedTier === 'premium' ? 'Premium' : 'Premium Plus'}
         </Text>
       </TouchableOpacity>
       
@@ -628,13 +288,6 @@ export default function PremiumScreen() {
           </Text>
           <ChevronRight size={20} color={Colors.primary} />
         </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.faqItem, { borderBottomColor: Colors.border }]}>
-          <Text style={[styles.faqQuestion, { color: Colors.text }]}>
-            How does the family plan work?
-          </Text>
-          <ChevronRight size={20} color={Colors.primary} />
-        </TouchableOpacity>
       </View>
       
       {/* Terms and Privacy */}
@@ -694,20 +347,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontWeight: '500',
   },
-  restoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginHorizontal: 16,
-    marginBottom: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  restoreButtonText: {
-    marginLeft: 8,
-    fontWeight: '500',
-  },
   plansContainer: {
     padding: 16,
   },
@@ -715,20 +354,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 16,
-  },
-  planTypeSelector: {
-    flexDirection: 'row',
-    borderRadius: 8,
-    marginBottom: 16,
-    overflow: 'hidden',
-  },
-  planTypeOption: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  planTypeText: {
-    fontWeight: '600',
   },
   planCard: {
     borderRadius: 12,
@@ -749,16 +374,6 @@ const styles = StyleSheet.create({
   planTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-  },
-  priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  originalPrice: {
-    fontSize: 14,
-    textDecorationLine: 'line-through',
-    marginRight: 6,
   },
   planPrice: {
     fontSize: 16,
@@ -809,100 +424,8 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
   },
-  familyPlanHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-  },
-  familyPlanText: {
-    marginLeft: 12,
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  promoContainer: {
-    borderRadius: 12,
-    padding: 16,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  promoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  promoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  promoInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  promoInput: {
-    flex: 1,
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    marginRight: 8,
-  },
-  promoButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  promoButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '500',
-  },
-  promoApplied: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  promoAppliedText: {
-    marginLeft: 8,
-    fontWeight: '500',
-  },
-  trialButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: 16,
-    marginTop: 0,
-    borderRadius: 12,
-    paddingVertical: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  trialButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  trialBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginVertical: 4,
-  },
-  trialBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
   subscribeButton: {
     margin: 16,
-    marginTop: 8,
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
