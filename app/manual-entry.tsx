@@ -26,11 +26,6 @@ export default function ManualEntryScreen() {
   const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Macros
-  const [protein, setProtein] = useState('');
-  const [carbs, setCarbs] = useState('');
-  const [fat, setFat] = useState('');
-  
   const { addMeal } = useMealStore();
   
   const handleSubmit = async () => {
@@ -46,11 +41,6 @@ export default function ManualEntryScreen() {
       return;
     }
     
-    // Parse macros
-    const proteinNum = parseFloat(protein) || 0;
-    const carbsNum = parseFloat(carbs) || 0;
-    const fatNum = parseFloat(fat) || 0;
-    
     setIsSubmitting(true);
     
     try {
@@ -59,12 +49,7 @@ export default function ManualEntryScreen() {
         calories: caloriesNum,
         method: 'manual',
         mealType,
-        notes: notes.trim() || undefined,
-        macros: {
-          protein: proteinNum,
-          carbs: carbsNum,
-          fat: fatNum
-        }
+        notes: notes.trim() || undefined
       });
       
       router.back();
@@ -128,66 +113,6 @@ export default function ManualEntryScreen() {
             placeholderTextColor={Colors.mediumGray}
             keyboardType="number-pad"
           />
-          
-          <Text style={[styles.label, { color: Colors.text }]}>Macros (Optional)</Text>
-          <View style={styles.macrosContainer}>
-            <View style={styles.macroInputGroup}>
-              <Text style={[styles.macroLabel, { color: Colors.macros.protein }]}>Protein (g)</Text>
-              <TextInput
-                style={[
-                  styles.macroInput, 
-                  { 
-                    backgroundColor: Colors.card,
-                    borderColor: Colors.border,
-                    color: Colors.text
-                  }
-                ]}
-                value={protein}
-                onChangeText={setProtein}
-                placeholder="0"
-                placeholderTextColor={Colors.mediumGray}
-                keyboardType="decimal-pad"
-              />
-            </View>
-            
-            <View style={styles.macroInputGroup}>
-              <Text style={[styles.macroLabel, { color: Colors.macros.carbs }]}>Carbs (g)</Text>
-              <TextInput
-                style={[
-                  styles.macroInput, 
-                  { 
-                    backgroundColor: Colors.card,
-                    borderColor: Colors.border,
-                    color: Colors.text
-                  }
-                ]}
-                value={carbs}
-                onChangeText={setCarbs}
-                placeholder="0"
-                placeholderTextColor={Colors.mediumGray}
-                keyboardType="decimal-pad"
-              />
-            </View>
-            
-            <View style={styles.macroInputGroup}>
-              <Text style={[styles.macroLabel, { color: Colors.macros.fat }]}>Fat (g)</Text>
-              <TextInput
-                style={[
-                  styles.macroInput, 
-                  { 
-                    backgroundColor: Colors.card,
-                    borderColor: Colors.border,
-                    color: Colors.text
-                  }
-                ]}
-                value={fat}
-                onChangeText={setFat}
-                placeholder="0"
-                placeholderTextColor={Colors.mediumGray}
-                keyboardType="decimal-pad"
-              />
-            </View>
-          </View>
           
           <MealTypeSelector 
             selectedType={mealType}
@@ -278,28 +203,6 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     marginBottom: 16,
-  },
-  macrosContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  macroInputGroup: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  macroLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-    textAlign: 'center',
-  },
-  macroInput: {
-    borderRadius: 8,
-    borderWidth: 1,
-    padding: 8,
-    fontSize: 14,
-    textAlign: 'center',
   },
   notesInput: {
     minHeight: 80,

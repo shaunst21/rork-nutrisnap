@@ -7,11 +7,6 @@ export interface Meal {
   method: 'scan' | 'manual';
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   notes?: string;
-  macros?: {
-    protein?: number;
-    carbs?: number;
-    fat?: number;
-  };
   image?: string;
 }
 

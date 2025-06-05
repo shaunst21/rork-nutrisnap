@@ -6,10 +6,7 @@ import {
   getCaloriesPerDayForWeek,
   getMostCommonFoods,
   getCaloriesByMealType,
-  getAverageDailyCalories,
-  getMacrosForDate,
-  getMacrosForWeek,
-  getMacrosForMonth
+  getAverageDailyCalories
 } from '@/utils/calorieHelpers';
 import { getStreakData } from '@/firebase';
 import { Stats } from '@/types';
@@ -27,13 +24,6 @@ interface StatsState extends Stats {
   error: string | null;
   fetchStats: () => Promise<void>;
 }
-
-// Default macro values to prevent undefined errors
-const defaultMacros = {
-  protein: 0,
-  carbs: 0,
-  fat: 0
-};
 
 export const useStatsStore = create<StatsState>((set) => ({
   todayCalories: 0,
@@ -85,10 +75,7 @@ export const useStatsStore = create<StatsState>((set) => ({
         mealTypeCalories,
         averageDailyCalories,
         commonFoods,
-        streakData,
-        todayMacros,
-        weekMacros,
-        monthMacros
+        streakData
       ] = await Promise.all([
         getCaloriesForDate(today),
         getCaloriesForWeek(),
@@ -97,30 +84,8 @@ export const useStatsStore = create<StatsState>((set) => ({
         getCaloriesByMealType(),
         getAverageDailyCalories(),
         getMostCommonFoods(5),
-        getStreakData(),
-        getMacrosForDate(today),
-        getMacrosForWeek(),
-        getMacrosForMonth()
+        getStreakData()
       ]);
-      
-      // Ensure we have valid macro objects with defaults
-      const safeTodayMacros = {
-        protein: todayMacros?.protein ?? 0,
-        carbs: todayMacros?.carbs ?? 0,
-        fat: todayMacros?.fat ?? 0
-      };
-      
-      const safeWeekMacros = {
-        protein: weekMacros?.protein ?? 0,
-        carbs: weekMacros?.carbs ?? 0,
-        fat: weekMacros?.fat ?? 0
-      };
-      
-      const safeMonthMacros = {
-        protein: monthMacros?.protein ?? 0,
-        carbs: monthMacros?.carbs ?? 0,
-        fat: monthMacros?.fat ?? 0
-      };
       
       set({
         todayCalories,
@@ -132,11 +97,6 @@ export const useStatsStore = create<StatsState>((set) => ({
         commonFoods,
         currentStreak: streakData?.currentStreak || 0,
         longestStreak: streakData?.longestStreak || 0,
-        macros: {
-          today: safeTodayMacros,
-          week: safeWeekMacros,
-          month: safeMonthMacros
-        },
         isLoading: false
       });
     } catch (error) {
