@@ -5,22 +5,27 @@ import MacroProgressBar from './MacroProgressBar';
 import { usePreferencesStore } from '@/store/preferencesStore';
 
 interface MacrosCardProps {
-  macros: {
-    protein: number;
-    carbs: number;
-    fat: number;
+  macros?: {
+    protein?: number;
+    carbs?: number;
+    fat?: number;
   };
   title: string;
 }
 
-const MacrosCard = ({ macros, title }: MacrosCardProps) => {
+const MacrosCard = ({ macros = { protein: 0, carbs: 0, fat: 0 }, title }: MacrosCardProps) => {
   const Colors = useThemeColors();
   const { preferences } = usePreferencesStore();
   
+  // Ensure macros has valid values with defaults
+  const safeProtein = macros?.protein || 0;
+  const safeCarbs = macros?.carbs || 0;
+  const safeFat = macros?.fat || 0;
+  
   // Calculate calories from macros
-  const proteinCalories = macros.protein * 4;
-  const carbsCalories = macros.carbs * 4;
-  const fatCalories = macros.fat * 9;
+  const proteinCalories = safeProtein * 4;
+  const carbsCalories = safeCarbs * 4;
+  const fatCalories = safeFat * 9;
   const totalCalories = proteinCalories + carbsCalories + fatCalories;
   
   // Calculate percentages
@@ -34,21 +39,21 @@ const MacrosCard = ({ macros, title }: MacrosCardProps) => {
       
       <MacroProgressBar 
         label="Protein"
-        current={macros.protein}
+        current={safeProtein}
         goal={preferences.macroGoals.protein}
         color={Colors.macros.protein}
       />
       
       <MacroProgressBar 
         label="Carbs"
-        current={macros.carbs}
+        current={safeCarbs}
         goal={preferences.macroGoals.carbs}
         color={Colors.macros.carbs}
       />
       
       <MacroProgressBar 
         label="Fat"
-        current={macros.fat}
+        current={safeFat}
         goal={preferences.macroGoals.fat}
         color={Colors.macros.fat}
       />

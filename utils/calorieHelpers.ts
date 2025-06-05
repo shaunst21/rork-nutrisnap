@@ -9,6 +9,13 @@ import {
   getDaysOfWeek
 } from './dateHelpers';
 
+// Default macros object to prevent undefined errors
+const defaultMacros = {
+  protein: 0,
+  carbs: 0,
+  fat: 0
+};
+
 // Get total calories for a specific date
 export const getCaloriesForDate = async (date: string): Promise<number> => {
   try {
@@ -284,11 +291,7 @@ export const getMacrosForDate = async (date: string): Promise<{
     return result;
   } catch (error) {
     console.error('Error getting macros for date:', error);
-    return {
-      protein: 0,
-      carbs: 0,
-      fat: 0
-    };
+    return { ...defaultMacros };
   }
 };
 
@@ -329,11 +332,7 @@ export const getMacrosForWeek = async (): Promise<{
     return result;
   } catch (error) {
     console.error('Error getting macros for week:', error);
-    return {
-      protein: 0,
-      carbs: 0,
-      fat: 0
-    };
+    return { ...defaultMacros };
   }
 };
 
@@ -374,11 +373,7 @@ export const getMacrosForMonth = async (): Promise<{
     return result;
   } catch (error) {
     console.error('Error getting macros for month:', error);
-    return {
-      protein: 0,
-      carbs: 0,
-      fat: 0
-    };
+    return { ...defaultMacros };
   }
 };
 

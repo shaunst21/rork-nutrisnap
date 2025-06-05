@@ -1,20 +1,22 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Crown } from 'lucide-react-native';
+import { Crown, Gift } from 'lucide-react-native';
 import { useSubscriptionStore } from '@/store/subscriptionStore';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useRouter } from 'expo-router';
 
 interface SubscriptionBannerProps {
   compact?: boolean;
+  showTrial?: boolean;
 }
 
-const SubscriptionBanner = ({ compact = false }: SubscriptionBannerProps) => {
+const SubscriptionBanner = ({ compact = false, showTrial = true }: SubscriptionBannerProps) => {
   const Colors = useThemeColors();
   const router = useRouter();
-  const { getSubscriptionTier } = useSubscriptionStore();
+  const { getSubscriptionTier, isTrialAvailable } = useSubscriptionStore();
   
   const currentTier = getSubscriptionTier();
+  const canTrial = isTrialAvailable() && showTrial;
   
   // Don't show for premium users
   if (currentTier !== 'free') {
@@ -31,8 +33,17 @@ const SubscriptionBanner = ({ compact = false }: SubscriptionBannerProps) => {
         style={[styles.compactContainer, { backgroundColor: Colors.primary }]}
         onPress={handlePress}
       >
-        <Crown size={16} color="#FFFFFF" />
-        <Text style={styles.compactText}>Upgrade to Premium</Text>
+        {canTrial ? (
+          <>
+            <Gift size={16} color="#FFFFFF" />
+            <Text style={styles.compactText}>Start Free Trial</Text>
+          </>
+        ) : (
+          <>
+            <Crown size={16} color="#FFFFFF" />
+            <Text style={styles.compactText}>Upgrade to Premium</Text>
+          </>
+        )}
       </TouchableOpacity>
     );
   }
@@ -42,15 +53,29 @@ const SubscriptionBanner = ({ compact = false }: SubscriptionBannerProps) => {
       style={[styles.container, { backgroundColor: Colors.card }]}
       onPress={handlePress}
     >
-      <View style={[styles.iconContainer, { backgroundColor: Colors.primary }]}>
-        <Crown size={24} color="#FFFFFF" />
+      <View style={[styles.iconContainer, { backgroundColor: canTrial ? Colors.secondary : Colors.primary }]}>
+        {canTrial ? (
+          <Gift size={24} color="#FFFFFF" />
+        ) : (
+          <Crown size={24} color="#FFFFFF" />
+        )}
       </View>
       <View style={styles.content}>
-        <Text style={[styles.title, { color: Colors.text }]}>Upgrade to Premium</Text>
+        <Text style={[styles.title, { color: Colors.text }]}>
+          {canTrial ? 'Try Premium for Free' : 'Upgrade to Premium'}
+        </Text>
         <Text style={[styles.description, { color: Colors.subtext }]}>
-          Unlock advanced features and get more insights
+          {canTrial 
+            ? 'Start your 7-day free trial today'
+            : 'Unlock advanced features and get more insights'
+          }
         </Text>
       </View>
+      {canTrial && (
+        <View style={[styles.trialBadge, { backgroundColor: Colors.secondary }]}>
+          <Text style={styles.trialBadgeText}>7 DAYS FREE</Text>
+        </View>
+      )}
     </TouchableOpacity>
   );
 };
@@ -103,6 +128,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginLeft: 4,
+  },
+  trialBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  trialBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });
 

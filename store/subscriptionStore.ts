@@ -1,24 +1,30 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Subscription, SubscriptionTier, SubscriptionFeature } from '@/types';
+import { Subscription, SubscriptionTier, SubscriptionFeature, PromoCode } from '@/types';
 
 interface SubscriptionState {
   subscription: Subscription | null;
   features: SubscriptionFeature[];
   isLoading: boolean;
   error: string | null;
+  trialUsed: boolean;
+  promoCodes: PromoCode[];
   
   // Actions
   setSubscription: (subscription: Subscription) => void;
   cancelSubscription: () => void;
   updateAutoRenew: (autoRenew: boolean) => void;
+  startTrial: (tier: SubscriptionTier) => void;
+  applyPromoCode: (code: string) => boolean;
+  restorePurchases: () => Promise<boolean>;
   
   // Helpers
   hasFeature: (featureId: string) => boolean;
   getRemainingDays: () => number;
   isSubscriptionActive: () => boolean;
   getSubscriptionTier: () => SubscriptionTier;
+  isTrialAvailable: () => boolean;
 }
 
 // Default subscription features
@@ -102,6 +108,22 @@ const DEFAULT_FEATURES: SubscriptionFeature[] = [
   }
 ];
 
+// Default promo codes
+const DEFAULT_PROMO_CODES: PromoCode[] = [
+  {
+    code: 'WELCOME25',
+    discountPercent: 25,
+    expiryDate: new Date(2025, 11, 31).toISOString(),
+    isUsed: false
+  },
+  {
+    code: 'SUMMER2025',
+    discountPercent: 30,
+    expiryDate: new Date(2025, 8, 30).toISOString(),
+    isUsed: false
+  }
+];
+
 // Default free subscription
 const DEFAULT_SUBSCRIPTION: Subscription = {
   tier: 'free',
@@ -118,6 +140,8 @@ export const useSubscriptionStore = create<SubscriptionState>()(
       features: DEFAULT_FEATURES,
       isLoading: false,
       error: null,
+      trialUsed: false,
+      promoCodes: DEFAULT_PROMO_CODES,
       
       setSubscription: (subscription) => {
         set({ subscription });
@@ -145,6 +169,82 @@ export const useSubscriptionStore = create<SubscriptionState>()(
               autoRenew
             }
           });
+        }
+      },
+      
+      startTrial: (tier) => {
+        const { trialUsed } = get();
+        
+        if (trialUsed) {
+          set({ error: 'Trial already used' });
+          return;
+        }
+        
+        // Set up a 7-day trial
+        const now = new Date();
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 7);
+        
+        set({
+          subscription: {
+            tier,
+            startDate: now.toISOString(),
+            endDate: endDate.toISOString(),
+            autoRenew: false,
+            status: 'active',
+            isTrial: true
+          },
+          trialUsed: true,
+          error: null
+        });
+      },
+      
+      applyPromoCode: (code) => {
+        const { promoCodes } = get();
+        const promoCode = promoCodes.find(
+          promo => promo.code === code && !promo.isUsed && new Date(promo.expiryDate) > new Date()
+        );
+        
+        if (promoCode) {
+          // Mark promo code as used
+          set({
+            promoCodes: promoCodes.map(promo => 
+              promo.code === code ? { ...promo, isUsed: true } : promo
+            )
+          });
+          return true;
+        }
+        
+        return false;
+      },
+      
+      restorePurchases: async () => {
+        set({ isLoading: true });
+        
+        try {
+          // In a real app, this would call the app store API to restore purchases
+          // For this demo, we'll simulate a successful restore after a delay
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Check if there was a previous non-free subscription
+          const previousSubscription = await AsyncStorage.getItem('previous-subscription');
+          
+          if (previousSubscription) {
+            const parsedSubscription = JSON.parse(previousSubscription);
+            set({ subscription: parsedSubscription });
+            set({ isLoading: false });
+            return true;
+          }
+          
+          set({ isLoading: false });
+          return false;
+        } catch (error) {
+          console.error('Error restoring purchases:', error);
+          set({ 
+            isLoading: false,
+            error: 'Failed to restore purchases. Please try again.'
+          });
+          return false;
         }
       },
       
@@ -192,6 +292,10 @@ export const useSubscriptionStore = create<SubscriptionState>()(
         if (!subscription || !isSubscriptionActive()) return 'free';
         
         return subscription.tier;
+      },
+      
+      isTrialAvailable: () => {
+        return !get().trialUsed;
       }
     }),
     {

@@ -71,6 +71,9 @@ export default function HomeScreen() {
     router.push('/manual-entry');
   };
   
+  // Ensure macros.today exists before passing to MacrosCard
+  const todayMacros = macros?.today || { protein: 0, carbs: 0, fat: 0 };
+  
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: Colors.background }]}
@@ -95,7 +98,7 @@ export default function HomeScreen() {
       
       {/* Macros Card */}
       <MacrosCard 
-        macros={macros.today}
+        macros={todayMacros}
         title="Today's Macros"
       />
       

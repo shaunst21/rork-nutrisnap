@@ -19,6 +19,29 @@ interface MealState {
   syncOfflineMeals: () => Promise<void>;
 }
 
+// Ensure meal macros are always defined with defaults
+const ensureMealMacros = (meal: any): Meal => {
+  if (!meal.macros) {
+    return {
+      ...meal,
+      macros: {
+        protein: 0,
+        carbs: 0,
+        fat: 0
+      }
+    };
+  }
+  
+  return {
+    ...meal,
+    macros: {
+      protein: meal.macros.protein || 0,
+      carbs: meal.macros.carbs || 0,
+      fat: meal.macros.fat || 0
+    }
+  };
+};
+
 export const useMealStore = create<MealState>()(
   persist(
     (set, get) => ({
@@ -30,7 +53,9 @@ export const useMealStore = create<MealState>()(
         set({ isLoading: true, error: null });
         try {
           const meals = await getMeals();
-          set({ meals, isLoading: false });
+          // Ensure all meals have valid macros
+          const safetyMeals = meals.map(ensureMealMacros);
+          set({ meals: safetyMeals, isLoading: false });
         } catch (error) {
           console.error('Error fetching meals:', error);
           set({ error: 'Failed to fetch meals', isLoading: false });
@@ -40,8 +65,14 @@ export const useMealStore = create<MealState>()(
       addMeal: async (mealData) => {
         set({ isLoading: true, error: null });
         try {
-          const newMeal = {
+          // Ensure macros are defined
+          const mealWithMacros = {
             ...mealData,
+            macros: mealData.macros || { protein: 0, carbs: 0, fat: 0 }
+          };
+          
+          const newMeal = {
+            ...mealWithMacros,
             date: new Date().toISOString(),
           };
           
@@ -50,7 +81,7 @@ export const useMealStore = create<MealState>()(
             // Add to Firebase
             const addedMeal = await addMeal(newMeal);
             set(state => ({
-              meals: [...state.meals, addedMeal],
+              meals: [...state.meals, ensureMealMacros(addedMeal)],
               isLoading: false
             }));
           } else {
@@ -62,7 +93,7 @@ export const useMealStore = create<MealState>()(
             
             // Add to local state
             set(state => ({
-              meals: [...state.meals, offlineMeal],
+              meals: [...state.meals, ensureMealMacros(offlineMeal)],
               isLoading: false
             }));
             

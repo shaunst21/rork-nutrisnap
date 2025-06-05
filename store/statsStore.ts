@@ -28,6 +28,13 @@ interface StatsState extends Stats {
   fetchStats: () => Promise<void>;
 }
 
+// Default macro values to prevent undefined errors
+const defaultMacros = {
+  protein: 0,
+  carbs: 0,
+  fat: 0
+};
+
 export const useStatsStore = create<StatsState>((set) => ({
   todayCalories: 0,
   weekCalories: 0,
@@ -96,6 +103,11 @@ export const useStatsStore = create<StatsState>((set) => ({
         getMacrosForMonth()
       ]);
       
+      // Ensure we have valid macro objects with defaults
+      const safeTodayMacros = todayMacros || { ...defaultMacros };
+      const safeWeekMacros = weekMacros || { ...defaultMacros };
+      const safeMonthMacros = monthMacros || { ...defaultMacros };
+      
       set({
         todayCalories,
         weekCalories,
@@ -104,12 +116,24 @@ export const useStatsStore = create<StatsState>((set) => ({
         mealTypeCalories,
         averageDailyCalories,
         commonFoods,
-        currentStreak: streakData.currentStreak,
-        longestStreak: streakData.longestStreak,
+        currentStreak: streakData?.currentStreak || 0,
+        longestStreak: streakData?.longestStreak || 0,
         macros: {
-          today: todayMacros,
-          week: weekMacros,
-          month: monthMacros
+          today: {
+            protein: safeTodayMacros.protein || 0,
+            carbs: safeTodayMacros.carbs || 0,
+            fat: safeTodayMacros.fat || 0
+          },
+          week: {
+            protein: safeWeekMacros.protein || 0,
+            carbs: safeWeekMacros.carbs || 0,
+            fat: safeWeekMacros.fat || 0
+          },
+          month: {
+            protein: safeMonthMacros.protein || 0,
+            carbs: safeMonthMacros.carbs || 0,
+            fat: safeMonthMacros.fat || 0
+          }
         },
         isLoading: false
       });

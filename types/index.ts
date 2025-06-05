@@ -1,30 +1,30 @@
-// Meal type definitions
+// Meal Types
 export interface Meal {
   id?: string;
   food: string;
   calories: number;
   date: string;
   method: 'scan' | 'manual';
-  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   notes?: string;
-  // Added macros
   macros?: {
-    protein: number;
-    carbs: number;
-    fat: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
   };
+  image?: string;
 }
 
-// Stats type definitions
+// Stats Types
 export interface Stats {
   todayCalories: number;
   weekCalories: number;
   monthCalories: number;
   averageDailyCalories: number;
-  commonFoods: Array<{food: string, count: number}>;
+  commonFoods: { food: string; count: number }[];
   currentStreak: number;
   longestStreak: number;
-  // Added macros stats
+  lastLogDate?: string;
   macros: {
     today: {
       protein: number;
@@ -44,38 +44,31 @@ export interface Stats {
   };
 }
 
-// User preferences
-export interface UserPreferences {
+// Preferences Types
+export interface Preferences {
   dailyCalorieGoal: number;
   weeklyCalorieGoal: number;
-  theme: 'light' | 'dark' | 'system';
   notifications: boolean;
-  // Added macro goals
+  theme: 'light' | 'dark' | 'system';
   macroGoals: {
-    protein: number; // in grams
-    carbs: number; // in grams
-    fat: number; // in grams
+    protein: number;
+    carbs: number;
+    fat: number;
   };
 }
 
-// Streak data
-export interface StreakData {
-  currentStreak: number;
-  longestStreak: number;
-  lastLogDate: string | null;
-}
+// Subscription Types
+export type SubscriptionTier = 'free' | 'premium' | 'premium_plus' | 'family';
 
-// Subscription types
 export interface Subscription {
   tier: SubscriptionTier;
   startDate: string;
-  endDate: string | null; // null for lifetime subscriptions
+  endDate: string | null;
   autoRenew: boolean;
-  status: 'active' | 'expired' | 'canceled';
-  paymentMethod?: string;
+  status: 'active' | 'canceled' | 'expired';
+  isTrial?: boolean;
+  familyMembers?: string[]; // For family plan
 }
-
-export type SubscriptionTier = 'free' | 'premium' | 'premium_plus';
 
 export interface SubscriptionFeature {
   id: string;
@@ -85,78 +78,41 @@ export interface SubscriptionFeature {
   icon: string;
 }
 
-// Recipe type
-export interface Recipe {
-  id: string;
-  name: string;
-  description: string;
-  ingredients: string[];
-  instructions: string[];
-  prepTime: number; // in minutes
-  cookTime: number; // in minutes
-  servings: number;
-  calories: number;
-  macros: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-  image?: string;
-  tags: string[];
-  isFavorite: boolean;
+export interface PromoCode {
+  code: string;
+  discountPercent: number;
+  expiryDate: string;
+  isUsed: boolean;
 }
 
-// Meal plan type
-export interface MealPlan {
-  id: string;
-  name: string;
-  description: string;
-  days: MealPlanDay[];
-  totalCalories: number;
-  totalMacros: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-  isActive: boolean;
-  createdAt: string;
-}
-
-export interface MealPlanDay {
-  dayOfWeek: number; // 0-6 (Sunday-Saturday)
-  meals: {
-    breakfast: MealPlanItem[];
-    lunch: MealPlanItem[];
-    dinner: MealPlanItem[];
-    snack: MealPlanItem[];
-  };
-  totalCalories: number;
-  totalMacros: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-}
-
-export interface MealPlanItem {
-  recipeId?: string;
-  customFood?: {
-    name: string;
-    calories: number;
-    macros: {
-      protein: number;
-      carbs: number;
-      fat: number;
-    };
-  };
-  servings: number;
-}
-
-// Export data type
+// Export Data Type
 export interface ExportData {
   meals: Meal[];
-  stats: Stats;
-  preferences: UserPreferences;
-  mealPlans?: MealPlan[];
-  recipes?: Recipe[];
+  stats: {
+    todayCalories: number;
+    weekCalories: number;
+    monthCalories: number;
+    averageDailyCalories: number;
+    commonFoods: { food: string; count: number }[];
+    currentStreak: number;
+    longestStreak: number;
+    macros: {
+      today: {
+        protein: number;
+        carbs: number;
+        fat: number;
+      };
+      week: {
+        protein: number;
+        carbs: number;
+        fat: number;
+      };
+      month: {
+        protein: number;
+        carbs: number;
+        fat: number;
+      };
+    };
+  };
+  preferences: Preferences;
 }

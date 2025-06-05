@@ -54,6 +54,10 @@ export default function StatsScreen() {
     return Math.round((value / totalMealTypeCalories) * 100);
   };
   
+  // Ensure macros objects exist before passing to MacrosCard
+  const todayMacros = macros?.today || { protein: 0, carbs: 0, fat: 0 };
+  const weekMacros = macros?.week || { protein: 0, carbs: 0, fat: 0 };
+  
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: Colors.background }]}
@@ -73,12 +77,12 @@ export default function StatsScreen() {
         <Text style={[styles.sectionTitle, { color: Colors.text }]}>Macros</Text>
         
         <MacrosCard 
-          macros={macros.today}
+          macros={todayMacros}
           title="Today's Macros"
         />
         
         <MacrosCard 
-          macros={macros.week}
+          macros={weekMacros}
           title="Weekly Macros"
         />
       </View>
