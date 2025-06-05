@@ -9,7 +9,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 export default function HistoryScreen() {
   const { meals, fetchMeals, isLoading } = useMealStore();
   const [refreshing, setRefreshing] = useState(false);
-  const [filterType, setFilterType] = useState<'all' | 'scan' | 'manual'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'scan' | 'manual' | 'api'>('all');
   const Colors = useThemeColors();
   
   useEffect(() => {
@@ -140,6 +140,25 @@ export default function HistoryScreen() {
               Manual
             </Text>
           </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              { backgroundColor: Colors.card },
+              filterType === 'api' && [styles.activeFilterButton, { backgroundColor: Colors.primary }],
+            ]}
+            onPress={() => setFilterType('api')}
+          >
+            <Text
+              style={[
+                styles.filterButtonText,
+                { color: Colors.text },
+                filterType === 'api' && styles.activeFilterText,
+              ]}
+            >
+              AI
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
       
@@ -163,6 +182,8 @@ export default function HistoryScreen() {
                   calories={meal.calories}
                   date={meal.date}
                   method={meal.method}
+                  mealType={meal.mealType}
+                  notes={meal.notes}
                   onDelete={fetchMeals}
                 />
               ))}
@@ -197,12 +218,14 @@ const styles = StyleSheet.create({
   },
   filterButtons: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   filterButton: {
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
     marginRight: 8,
+    marginBottom: 8,
   },
   activeFilterButton: {
     // backgroundColor is applied dynamically
