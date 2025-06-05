@@ -140,8 +140,8 @@ export default function ManualEntryScreen() {
           <View style={styles.formGroup}>
             <Text style={[styles.label, { color: Colors.text }]}>Meal Type</Text>
             <MealTypeSelector
-              selectedMealType={mealType}
-              onSelectMealType={setMealType}
+              selectedType={mealType}
+              onSelect={setMealType}
             />
           </View>
           
