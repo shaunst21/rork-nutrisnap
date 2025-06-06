@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect } from 'react';
 import { useColorScheme, StatusBar } from 'react-native';
 import { useThemeStore } from '@/store/themeStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
+import Colors from '@/constants/colors';
 
 // Create context
 const ThemeContext = createContext<{

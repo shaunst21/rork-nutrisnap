@@ -95,8 +95,7 @@ export default function HistoryScreen() {
             <Text
               style={[
                 styles.filterButtonText,
-                { color: Colors.text },
-                filterType === 'all' && styles.activeFilterText,
+                { color: filterType === 'all' ? '#FFFFFF' : Colors.text },
               ]}
             >
               All
@@ -114,8 +113,7 @@ export default function HistoryScreen() {
             <Text
               style={[
                 styles.filterButtonText,
-                { color: Colors.text },
-                filterType === 'scan' && styles.activeFilterText,
+                { color: filterType === 'scan' ? '#FFFFFF' : Colors.text },
               ]}
             >
               Scanned
@@ -133,8 +131,7 @@ export default function HistoryScreen() {
             <Text
               style={[
                 styles.filterButtonText,
-                { color: Colors.text },
-                filterType === 'manual' && styles.activeFilterText,
+                { color: filterType === 'manual' ? '#FFFFFF' : Colors.text },
               ]}
             >
               Manual
@@ -210,10 +207,6 @@ const styles = StyleSheet.create({
   filterButtonText: {
     fontSize: 14,
     // color is applied dynamically
-  },
-  activeFilterText: {
-    color: '#FFFFFF',
-    fontWeight: '500',
   },
   dateHeader: {
     flexDirection: 'row',

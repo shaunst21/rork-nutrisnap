@@ -46,51 +46,47 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  const { getActiveTheme } = useThemeStore();
-  const activeTheme = getActiveTheme();
   const Colors = useThemeColors();
   
   return (
-    <>
-      <StatusBar style={activeTheme === 'dark' ? "light" : "dark"} />
-      <ThemeProvider>
-        <trpc.Provider client={trpcClient} queryClient={queryClient}>
-          <QueryClientProvider client={queryClient}>
-            <Stack
-              screenOptions={{
-                headerStyle: {
-                  backgroundColor: Colors.background,
-                },
-                headerTintColor: Colors.text,
-                headerTitleStyle: {
-                  fontWeight: 'bold',
-                },
-                contentStyle: {
-                  backgroundColor: Colors.background,
-                },
-              }}
-            >
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen 
-                name="scan" 
-                options={{ 
-                  title: "Scan Food",
-                  presentation: "modal",
-                  headerTitleAlign: "center",
-                }} 
-              />
-              <Stack.Screen 
-                name="manual-entry" 
-                options={{ 
-                  title: "Add Food",
-                  presentation: "modal",
-                  headerTitleAlign: "center",
-                }} 
-              />
-            </Stack>
-          </QueryClientProvider>
-        </trpc.Provider>
-      </ThemeProvider>
-    </>
+    <ThemeProvider>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <StatusBar style={Colors === Colors.dark ? "light" : "dark"} />
+          <Stack
+            screenOptions={{
+              headerStyle: {
+                backgroundColor: Colors.card,
+              },
+              headerTintColor: Colors.text,
+              headerTitleStyle: {
+                fontWeight: 'bold',
+              },
+              contentStyle: {
+                backgroundColor: Colors.background,
+              },
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen 
+              name="scan" 
+              options={{ 
+                title: "Scan Food",
+                presentation: "modal",
+                headerTitleAlign: "center",
+              }} 
+            />
+            <Stack.Screen 
+              name="manual-entry" 
+              options={{ 
+                title: "Add Food",
+                presentation: "modal",
+                headerTitleAlign: "center",
+              }} 
+            />
+          </Stack>
+        </QueryClientProvider>
+      </trpc.Provider>
+    </ThemeProvider>
   );
 }
