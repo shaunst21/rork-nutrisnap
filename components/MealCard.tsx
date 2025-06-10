@@ -11,7 +11,7 @@ interface MealCardProps {
   calories: number;
   date: string;
   method: 'scan' | 'manual';
-  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'other';
   notes?: string;
   onDelete?: () => void;
 }

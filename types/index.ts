@@ -36,6 +36,8 @@ export interface Meal {
   date: string;
   imageUri?: string;
   foods?: Food[];
+  method?: 'scan' | 'manual';
+  notes?: string;
 }
 
 export interface Food {

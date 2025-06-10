@@ -28,6 +28,7 @@ export default function HistoryScreen() {
   // Filter meals based on selected filter
   const filteredMeals = meals.filter(meal => {
     if (filterType === 'all') return true;
+    if (!meal.method) return false;
     return meal.method === filterType;
   });
   
@@ -156,10 +157,12 @@ export default function HistoryScreen() {
                 <MealCard
                   key={meal.id}
                   id={meal.id || ''}
-                  food={meal.food}
+                  food={meal.name}
                   calories={meal.calories}
                   date={meal.date}
-                  method={meal.method}
+                  method={meal.method || 'manual'}
+                  mealType={meal.mealType}
+                  notes={meal.notes}
                   onDelete={fetchMeals}
                 />
               ))}

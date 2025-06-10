@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { 
   getMeals, 
-  addMeal, 
+  addMeal as addMealToFirebase, 
   isOnline, 
   syncOfflineData 
 } from '@/firebase';
@@ -48,7 +48,7 @@ export const useMealStore = create<MealState>()(
           // Check if online
           if (isOnline()) {
             // Add to Firebase
-            const addedMeal = await addMeal(newMeal);
+            const addedMeal = await addMealToFirebase(newMeal);
             set(state => ({
               meals: [...state.meals, addedMeal],
               isLoading: false

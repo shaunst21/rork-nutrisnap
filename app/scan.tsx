@@ -91,13 +91,15 @@ export default function ScanScreen() {
   ) => {
     try {
       await addMeal({
-        food,
+        name: food,
         calories,
         method: 'scan',
         mealType: mealType as 'breakfast' | 'lunch' | 'dinner' | 'snack',
         notes: notes || undefined,
-        image: capturedImage || undefined,
-        macros
+        imageUri: capturedImage || undefined,
+        protein: macros?.protein || 0,
+        carbs: macros?.carbs || 0,
+        fat: macros?.fat || 0
       });
       
       router.back();
