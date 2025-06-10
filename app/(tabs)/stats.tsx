@@ -55,6 +55,19 @@ export default function StatsScreen() {
     return Math.round((value / totalMealTypeCalories) * 100);
   };
   
+  // Transform weeklyCalorieData for the chart component
+  const chartData = weeklyCalorieData.map((calories, index) => {
+    // Get day names (Mon, Tue, etc.)
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const today = new Date();
+    const dayIndex = (today.getDay() - 6 + index + 7) % 7; // Calculate day of week
+    
+    return {
+      day: days[dayIndex],
+      calories: calories
+    };
+  });
+  
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: Colors.background }]}
@@ -70,7 +83,7 @@ export default function StatsScreen() {
     >
       {/* Weekly Chart */}
       <WeeklyCalorieChart 
-        data={weeklyCalorieData} 
+        data={chartData} 
         goal={preferences.dailyCalorieGoal}
       />
       
