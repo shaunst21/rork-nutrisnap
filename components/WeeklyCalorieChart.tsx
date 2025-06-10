@@ -16,7 +16,8 @@ const WeeklyCalorieChart = ({ data, goal }: WeeklyCalorieChartProps) => {
   // Find the maximum value for scaling
   const maxCalories = Math.max(
     ...data.map(item => item.calories),
-    goal || 0
+    goal || 0,
+    100 // Minimum height for empty chart
   );
   
   // Calculate chart dimensions
@@ -29,7 +30,7 @@ const WeeklyCalorieChart = ({ data, goal }: WeeklyCalorieChartProps) => {
       
       <View style={styles.chartContainer}>
         {/* Goal line if provided */}
-        {goal && (
+        {goal && goal > 0 && (
           <View 
             style={[
               styles.goalLine, 
@@ -46,7 +47,7 @@ const WeeklyCalorieChart = ({ data, goal }: WeeklyCalorieChartProps) => {
         {/* Bars */}
         <View style={styles.barsContainer}>
           {data.map((item, index) => {
-            const heightPercentage = (item.calories / maxCalories) * 100;
+            const heightPercentage = Math.max((item.calories / maxCalories) * 100, 1);
             const isOverGoal = goal && item.calories > goal;
             
             return (

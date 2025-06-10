@@ -127,15 +127,34 @@ const firestore = new MockFirestore();
 
 // Helper functions for common operations
 export const getMeals = async (): Promise<Meal[]> => {
-  return await firestore.getCollection('users/CalorieLens/meals');
+  const meals = await firestore.getCollection('users/CalorieLens/meals');
+  console.log('Retrieved meals:', meals.length);
+  return meals;
 };
 
 export const addMeal = async (mealData: Omit<Meal, 'id'>): Promise<Meal> => {
-  return await firestore.addDocument('users/CalorieLens/meals', mealData);
+  // Ensure calories is a number
+  const processedMealData = {
+    ...mealData,
+    calories: Number(mealData.calories)
+  };
+  
+  const meal = await firestore.addDocument('users/CalorieLens/meals', processedMealData);
+  console.log('Added meal:', meal);
+  return meal;
 };
 
 export const updateMeal = async (id: string, mealData: Partial<Meal>): Promise<Meal> => {
-  return await firestore.updateDocument('users/CalorieLens/meals', id, mealData);
+  // Ensure calories is a number if provided
+  const processedMealData = {
+    ...mealData
+  };
+  
+  if (mealData.calories !== undefined) {
+    processedMealData.calories = Number(mealData.calories);
+  }
+  
+  return await firestore.updateDocument('users/CalorieLens/meals', id, processedMealData);
 };
 
 export const deleteMeal = async (id: string): Promise<boolean> => {
@@ -159,11 +178,14 @@ export const getMealsForDate = async (date: string): Promise<Meal[]> => {
 export const getStreakData = async (): Promise<StreakData> => {
   try {
     const data = await AsyncStorage.getItem('streak_data');
-    return data ? JSON.parse(data) : {
+    const streakData = data ? JSON.parse(data) : {
       currentStreak: 0,
       longestStreak: 0,
       lastLogDate: null
     };
+    
+    console.log('Retrieved streak data:', streakData);
+    return streakData;
   } catch (error) {
     console.error('Error getting streak data:', error);
     return {
@@ -177,6 +199,7 @@ export const getStreakData = async (): Promise<StreakData> => {
 export const updateStreakData = async (streakData: StreakData): Promise<StreakData> => {
   try {
     await AsyncStorage.setItem('streak_data', JSON.stringify(streakData));
+    console.log('Updated streak data:', streakData);
     return streakData;
   } catch (error) {
     console.error('Error updating streak data:', error);
@@ -187,8 +210,8 @@ export const updateStreakData = async (streakData: StreakData): Promise<StreakDa
 // Check if device is online
 export const isOnline = (): boolean => {
   // In a real app, this would check network connectivity
-  // For this mock, we'll assume online on iOS and offline on Android for testing
-  return Platform.OS === 'ios';
+  // For this mock, we'll assume always online for testing
+  return true;
 };
 
 // Sync offline data when back online
@@ -198,6 +221,7 @@ export const syncOfflineData = async (): Promise<void> => {
     
     if (offlineData) {
       const meals = JSON.parse(offlineData);
+      console.log('Syncing offline meals:', meals.length);
       
       // In a real app, this would batch upload to Firebase
       for (const meal of meals) {
@@ -206,9 +230,68 @@ export const syncOfflineData = async (): Promise<void> => {
       
       // Clear offline data
       await AsyncStorage.removeItem('offline_meals');
+      console.log('Offline meals synced and cleared');
     }
   } catch (error) {
     console.error('Error syncing offline data:', error);
+  }
+};
+
+// Add a debug function to add sample meals for testing
+export const addSampleMeals = async (): Promise<void> => {
+  try {
+    const today = new Date();
+    
+    // Sample meals for today
+    const breakfast = {
+      food: "Oatmeal with berries",
+      calories: 350,
+      mealType: "breakfast",
+      date: new Date(today).toISOString()
+    };
+    
+    const lunch = {
+      food: "Chicken salad",
+      calories: 450,
+      mealType: "lunch",
+      date: new Date(today).toISOString()
+    };
+    
+    const dinner = {
+      food: "Salmon with vegetables",
+      calories: 550,
+      mealType: "dinner",
+      date: new Date(today).toISOString()
+    };
+    
+    // Sample meals for yesterday
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const yesterdayBreakfast = {
+      food: "Eggs and toast",
+      calories: 400,
+      mealType: "breakfast",
+      date: new Date(yesterday).toISOString()
+    };
+    
+    const yesterdayLunch = {
+      food: "Turkey sandwich",
+      calories: 500,
+      mealType: "lunch",
+      date: new Date(yesterday).toISOString()
+    };
+    
+    // Add all meals
+    await addMeal(breakfast);
+    await addMeal(lunch);
+    await addMeal(dinner);
+    await addMeal(yesterdayBreakfast);
+    await addMeal(yesterdayLunch);
+    
+    console.log('Sample meals added');
+  } catch (error) {
+    console.error('Error adding sample meals:', error);
   }
 };
 
@@ -222,5 +305,6 @@ export default {
   getStreakData,
   updateStreakData,
   isOnline,
-  syncOfflineData
+  syncOfflineData,
+  addSampleMeals
 };

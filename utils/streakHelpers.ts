@@ -25,8 +25,11 @@ export const updateStreak = async (): Promise<{
     const today = new Date();
     const streakData = await getStreakData();
     
+    console.log('Current streak data:', streakData);
+    
     // If no last log date, this is the first meal
     if (!streakData.lastLogDate) {
+      console.log('First meal ever logged, starting streak at 1');
       const newStreakData = {
         currentStreak: 1,
         longestStreak: 1,
@@ -43,6 +46,7 @@ export const updateStreak = async (): Promise<{
     
     // If already logged today, streak doesn't change
     if (isSameDay(today, lastLogDate)) {
+      console.log('Already logged a meal today, streak remains at', streakData.currentStreak);
       return {
         currentStreak: streakData.currentStreak,
         longestStreak: streakData.longestStreak
@@ -53,6 +57,8 @@ export const updateStreak = async (): Promise<{
     if (isConsecutiveDay(today, lastLogDate)) {
       const currentStreak = streakData.currentStreak + 1;
       const longestStreak = Math.max(currentStreak, streakData.longestStreak);
+      
+      console.log('Consecutive day logged, streak increased to', currentStreak);
       
       await updateStreakData({
         currentStreak,
@@ -67,6 +73,8 @@ export const updateStreak = async (): Promise<{
     }
     
     // If not consecutive, reset streak
+    console.log('Non-consecutive day, resetting streak to 1');
+    
     await updateStreakData({
       currentStreak: 1,
       longestStreak: streakData.longestStreak,
@@ -102,8 +110,11 @@ export const checkAndUpdateStreak = async (): Promise<void> => {
       (today.getTime() - lastLogDate.getTime()) / (24 * 60 * 60 * 1000)
     );
     
+    console.log('Days since last log:', daysSinceLastLog);
+    
     // If more than 1 day has passed, reset streak
     if (daysSinceLastLog > 1) {
+      console.log('Streak broken, resetting to 0');
       await updateStreakData({
         currentStreak: 0,
         longestStreak: streakData.longestStreak,

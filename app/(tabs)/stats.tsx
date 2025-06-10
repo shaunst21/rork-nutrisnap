@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { TrendingUp, Calendar, Award, Utensils, BarChart, Target } from 'lucide-react-native';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { TrendingUp, Calendar, Award, Utensils, BarChart, Target, PlusCircle } from 'lucide-react-native';
 import { useStatsStore } from '@/store/statsStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
+import { useMealStore } from '@/store/mealStore';
 import StatCard from '@/components/StatCard';
 import WeeklyCalorieChart from '@/components/WeeklyCalorieChart';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { addSampleMeals } from '@/firebase';
+import { router } from 'expo-router';
 
 export default function StatsScreen() {
   const Colors = useThemeColors();
@@ -25,17 +28,27 @@ export default function StatsScreen() {
   } = useStatsStore();
   
   const { preferences } = usePreferencesStore();
+  const { meals, fetchMeals } = useMealStore();
   
   const [refreshing, setRefreshing] = useState(false);
   
+  // Fetch stats when the component mounts or when meals change
   useEffect(() => {
     fetchStats();
-  }, []);
+  }, [meals]);
   
   const onRefresh = async () => {
     setRefreshing(true);
+    await fetchMeals();
     await fetchStats();
     setRefreshing(false);
+  };
+  
+  // Add sample meals for testing
+  const handleAddSampleMeals = async () => {
+    await addSampleMeals();
+    await fetchMeals();
+    await fetchStats();
   };
   
   // Calculate total calories from meal types
@@ -51,6 +64,15 @@ export default function StatsScreen() {
     if (totalMealTypeCalories === 0) return 0;
     return Math.round((value / totalMealTypeCalories) * 100);
   };
+  
+  if (isLoading && !refreshing) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: Colors.background }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text style={[styles.loadingText, { color: Colors.text }]}>Loading stats...</Text>
+      </View>
+    );
+  }
   
   return (
     <ScrollView
@@ -207,9 +229,28 @@ export default function StatsScreen() {
               </View>
             </>
           ) : (
-            <Text style={[styles.emptyText, { color: Colors.subtext }]}>
-              No meals logged today. Add meals to see your breakdown.
-            </Text>
+            <View style={styles.emptyMealState}>
+              <Text style={[styles.emptyText, { color: Colors.subtext }]}>
+                No meals logged today. Add meals to see your breakdown.
+              </Text>
+              <View style={styles.actionButtons}>
+                <TouchableOpacity 
+                  style={[styles.actionButton, { backgroundColor: Colors.primary }]}
+                  onPress={() => router.push('/scan')}
+                >
+                  <Camera size={20} color="#FFFFFF" />
+                  <Text style={styles.actionButtonText}>Scan Food</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={[styles.actionButton, { backgroundColor: Colors.accent }]}
+                  onPress={() => router.push('/manual-entry')}
+                >
+                  <PlusCircle size={20} color="#FFFFFF" />
+                  <Text style={styles.actionButtonText}>Add Manually</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           )}
         </View>
       </View>
@@ -240,6 +281,14 @@ export default function StatsScreen() {
             <Text style={[styles.emptyText, { color: Colors.subtext }]}>
               No food data yet. Start logging meals to see your most common foods.
             </Text>
+            
+            {/* Debug button to add sample meals */}
+            <TouchableOpacity 
+              style={[styles.debugButton, { backgroundColor: Colors.primary }]}
+              onPress={handleAddSampleMeals}
+            >
+              <Text style={styles.debugButtonText}>Add Sample Meals (Debug)</Text>
+            </TouchableOpacity>
           </View>
         ) : (
           commonFoods.map((food, index) => (
@@ -268,6 +317,15 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingBottom: 24,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
   },
   section: {
     marginVertical: 16,
@@ -321,9 +379,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  emptyMealState: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+  },
   emptyText: {
     fontSize: 16,
     textAlign: 'center',
+    marginBottom: 16,
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  actionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    gap: 8,
+  },
+  actionButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  debugButton: {
+    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  debugButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
   foodItem: {
     flexDirection: 'row',

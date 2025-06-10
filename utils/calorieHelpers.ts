@@ -25,9 +25,13 @@ export const getCaloriesForDate = async (date: string): Promise<number> => {
     });
     
     // Sum calories
-    return mealsForDate.reduce((total: number, meal: any) => {
-      return total + (meal.calories || 0);
+    const totalCalories = mealsForDate.reduce((total: number, meal: any) => {
+      return total + (Number(meal.calories) || 0);
     }, 0);
+    
+    console.log(`Calories for ${dateObj.toDateString()}:`, totalCalories, 'from', mealsForDate.length, 'meals');
+    
+    return totalCalories;
   } catch (error) {
     console.error('Error getting calories for date:', error);
     return 0;
@@ -50,9 +54,14 @@ export const getCaloriesForWeek = async (): Promise<number> => {
     });
     
     // Sum calories
-    return mealsForWeek.reduce((total: number, meal: any) => {
-      return total + (meal.calories || 0);
+    const totalCalories = mealsForWeek.reduce((total: number, meal: any) => {
+      return total + (Number(meal.calories) || 0);
     }, 0);
+    
+    console.log(`Calories for week (${start.toDateString()} - ${end.toDateString()}):`, 
+      totalCalories, 'from', mealsForWeek.length, 'meals');
+    
+    return totalCalories;
   } catch (error) {
     console.error('Error getting calories for week:', error);
     return 0;
@@ -88,10 +97,12 @@ export const getCaloriesPerDayForWeek = async (): Promise<Array<{day: string, ca
       
       // Sum calories
       const calories = mealsForDay.reduce((total: number, meal: any) => {
-        return total + (meal.calories || 0);
+        return total + (Number(meal.calories) || 0);
       }, 0);
       
       result[i].calories = calories;
+      
+      console.log(`Calories for ${dayStart.toDateString()}:`, calories, 'from', mealsForDay.length, 'meals');
     }
     
     return result;
@@ -117,9 +128,14 @@ export const getCaloriesForMonth = async (): Promise<number> => {
     });
     
     // Sum calories
-    return mealsForMonth.reduce((total: number, meal: any) => {
-      return total + (meal.calories || 0);
+    const totalCalories = mealsForMonth.reduce((total: number, meal: any) => {
+      return total + (Number(meal.calories) || 0);
     }, 0);
+    
+    console.log(`Calories for month (${start.toDateString()} - ${end.toDateString()}):`, 
+      totalCalories, 'from', mealsForMonth.length, 'meals');
+    
+    return totalCalories;
   } catch (error) {
     console.error('Error getting calories for month:', error);
     return 0;
@@ -145,6 +161,8 @@ export const getMostCommonFoods = async (limit: number = 5): Promise<Array<{food
       .map(([food, count]) => ({ food, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, limit);
+    
+    console.log('Most common foods:', sortedFoods);
     
     return sortedFoods;
   } catch (error) {
@@ -185,7 +203,7 @@ export const getCaloriesByMealType = async (): Promise<{
     
     // Sum calories by meal type
     mealsForToday.forEach((meal: any) => {
-      const calories = meal.calories || 0;
+      const calories = Number(meal.calories) || 0;
       
       if (meal.mealType === 'breakfast') {
         result.breakfast += calories;
@@ -199,6 +217,8 @@ export const getCaloriesByMealType = async (): Promise<{
         result.other += calories;
       }
     });
+    
+    console.log('Calories by meal type for today:', result);
     
     return result;
   } catch (error) {
@@ -235,12 +255,16 @@ export const getAverageDailyCalories = async (): Promise<number> => {
     
     // Calculate total calories for each date
     const dailyCalories = Object.values(mealsByDate).map(dateMeals => {
-      return dateMeals.reduce((total, meal) => total + (meal.calories || 0), 0);
+      return dateMeals.reduce((total, meal) => total + (Number(meal.calories) || 0), 0);
     });
     
     // Calculate average
     const totalCalories = dailyCalories.reduce((sum, calories) => sum + calories, 0);
-    return Math.round(totalCalories / dailyCalories.length);
+    const average = Math.round(totalCalories / dailyCalories.length);
+    
+    console.log('Average daily calories:', average, 'from', dailyCalories.length, 'days');
+    
+    return average;
   } catch (error) {
     console.error('Error calculating average daily calories:', error);
     return 0;
