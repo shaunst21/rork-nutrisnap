@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -16,6 +16,8 @@ import {
 } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSubscriptionStore } from '@/store/subscriptionStore';
+import { useStatsStore } from '@/store/statsStore';
+import { usePreferencesStore } from '@/store/preferencesStore';
 import CalorieGoalProgress from '@/components/CalorieGoalProgress';
 import SubscriptionBanner from '@/components/SubscriptionBanner';
 
@@ -27,8 +29,16 @@ export default function HomeScreen() {
     getSubscriptionTier 
   } = useSubscriptionStore();
   
+  const { todayCalories, fetchStats } = useStatsStore();
+  const { preferences } = usePreferencesStore();
+  
   const currentTier = getSubscriptionTier();
   const canTrial = isTrialAvailable();
+  
+  // Fetch stats when component mounts
+  useEffect(() => {
+    fetchStats();
+  }, []);
   
   return (
     <ScrollView style={[styles.container, { backgroundColor: Colors.background }]}>
@@ -46,8 +56,11 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
       
-      {/* Calorie Progress */}
-      <CalorieGoalProgress />
+      {/* Calorie Progress - Now with proper props */}
+      <CalorieGoalProgress 
+        current={todayCalories} 
+        goal={preferences.dailyCalorieGoal} 
+      />
       
       {/* Premium Banner (if not premium) */}
       {currentTier === 'free' && (
@@ -117,7 +130,7 @@ export default function HomeScreen() {
       <View style={styles.recentMealsContainer}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: Colors.text }]}>Today's Meals</Text>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/history')}>
             <Text style={[styles.viewAllText, { color: Colors.primary }]}>View All</Text>
           </TouchableOpacity>
         </View>

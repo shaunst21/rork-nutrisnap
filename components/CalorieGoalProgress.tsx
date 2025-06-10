@@ -7,7 +7,7 @@ interface CalorieGoalProgressProps {
   goal: number;
 }
 
-const CalorieGoalProgress = ({ current, goal }: CalorieGoalProgressProps) => {
+const CalorieGoalProgress = ({ current = 0, goal = 2000 }: CalorieGoalProgressProps) => {
   const Colors = useThemeColors();
   const percentage = Math.min(Math.round((current / goal) * 100), 100);
   const isOverGoal = current > goal;
@@ -24,14 +24,17 @@ const CalorieGoalProgress = ({ current, goal }: CalorieGoalProgressProps) => {
     <View style={[styles.container, { backgroundColor: Colors.card }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: Colors.text }]}>Daily Calorie Goal</Text>
-        <Text style={[styles.percentage, { color: Colors.primary }]}>{percentage}%</Text>
+        <Text style={[styles.percentage, { color: progressColor }]}>{percentage}%</Text>
       </View>
       
       <View style={[styles.progressContainer, { backgroundColor: Colors.lightGray }]}>
         <View 
           style={[
             styles.progressBar, 
-            { width: `${percentage}%`, backgroundColor: progressColor }
+            { 
+              width: `${Math.min(percentage, 100)}%`, 
+              backgroundColor: progressColor 
+            }
           ]} 
         />
       </View>
