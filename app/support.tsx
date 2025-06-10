@@ -49,7 +49,7 @@ const mockTickets = [
     replies: [
       {
         id: '2-1',
-        message: 'We've checked your account and issued a refund for the duplicate charge. It should appear in your account within 3-5 business days.',
+        message: "We've checked your account and issued a refund for the duplicate charge. It should appear in your account within 3-5 business days.",
         isSupport: true,
         createdAt: '2025-06-01T11:20:00Z'
       },
@@ -61,7 +61,7 @@ const mockTickets = [
       },
       {
         id: '2-3',
-        message: 'You're welcome! Let us know if you need anything else.',
+        message: "You're welcome! Let us know if you need anything else.",
         isSupport: true,
         createdAt: '2025-06-01T14:30:00Z'
       }
