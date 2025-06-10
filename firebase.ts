@@ -247,21 +247,24 @@ export const addSampleMeals = async (): Promise<void> => {
       food: "Oatmeal with berries",
       calories: 350,
       mealType: "breakfast",
-      date: new Date(today).toISOString()
+      date: new Date(today).toISOString(),
+      method: "manual" as const
     };
     
     const lunch = {
       food: "Chicken salad",
       calories: 450,
       mealType: "lunch",
-      date: new Date(today).toISOString()
+      date: new Date(today).toISOString(),
+      method: "manual" as const
     };
     
     const dinner = {
       food: "Salmon with vegetables",
       calories: 550,
       mealType: "dinner",
-      date: new Date(today).toISOString()
+      date: new Date(today).toISOString(),
+      method: "manual" as const
     };
     
     // Sample meals for yesterday
@@ -272,14 +275,16 @@ export const addSampleMeals = async (): Promise<void> => {
       food: "Eggs and toast",
       calories: 400,
       mealType: "breakfast",
-      date: new Date(yesterday).toISOString()
+      date: new Date(yesterday).toISOString(),
+      method: "manual" as const
     };
     
     const yesterdayLunch = {
       food: "Turkey sandwich",
       calories: 500,
       mealType: "lunch",
-      date: new Date(yesterday).toISOString()
+      date: new Date(yesterday).toISOString(),
+      method: "manual" as const
     };
     
     // Add all meals

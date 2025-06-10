@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { TrendingUp, Calendar, Award, Utensils, BarChart, Target, PlusCircle } from 'lucide-react-native';
+import { TrendingUp, Calendar, Award, Utensils, BarChart, Target, PlusCircle, Camera } from 'lucide-react-native';
 import { useStatsStore } from '@/store/statsStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import { useMealStore } from '@/store/mealStore';
@@ -291,7 +291,7 @@ export default function StatsScreen() {
             </TouchableOpacity>
           </View>
         ) : (
-          commonFoods.map((food, index) => (
+          commonFoods.map((food: {food: string; count: number}, index: number) => (
             <View key={index} style={[styles.foodItem, { backgroundColor: Colors.card }]}>
               <View style={[styles.foodRank, { backgroundColor: Colors.primary }]}>
                 <Text style={styles.rankText}>{index + 1}</Text>

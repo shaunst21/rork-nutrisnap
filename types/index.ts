@@ -141,3 +141,19 @@ export interface FamilyMember {
     fat: number;
   };
 }
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastLogDate: string | null;
+}
+
+export interface Stats {
+  todayCalories: number;
+  weekCalories: number;
+  monthCalories: number;
+  averageDailyCalories: number;
+  commonFoods: Array<{food: string; count: number}>;
+  currentStreak: number;
+  longestStreak: number;
+}
