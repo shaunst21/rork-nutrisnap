@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
-import { TrendingUp, Calendar, Award, Utensils, BarChart, Target } from 'lucide-react-native';
+import { TrendingUp, Calendar, Award, Utensils, BarChart } from 'lucide-react-native';
 import { useStatsStore } from '@/store/statsStore';
 import { useMealStore } from '@/store/mealStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
