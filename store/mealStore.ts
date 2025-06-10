@@ -16,7 +16,7 @@ interface MealState {
   isLoading: boolean;
   error: string | null;
   fetchMeals: () => Promise<void>;
-  addMeal: (meal: Omit<Meal, 'id' | 'date'>) => Promise<Meal>;
+  addMeal: (meal: Omit<Meal, 'id' | 'date'>) => Promise<void>;
   syncOfflineMeals: () => Promise<void>;
 }
 
@@ -50,7 +50,7 @@ export const useMealStore = create<MealState>()(
             date: new Date().toISOString(),
           };
           
-          let addedMeal: Meal;
+          let addedMeal;
           
           // Check if online
           if (isOnline()) {

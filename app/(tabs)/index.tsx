@@ -100,7 +100,7 @@ export default function HomeScreen() {
       />
       
       {/* Premium Banner (if not premium) */}
-      {currentTier.tier === 'free' && (
+      {currentTier === 'free' && (
         <SubscriptionBanner canTrial={canTrial} />
       )}
       
@@ -142,7 +142,7 @@ export default function HomeScreen() {
       </View>
       
       {/* Premium Features */}
-      {currentTier.tier === 'premium' && (
+      {currentTier === 'premium' && (
         <View style={styles.premiumFeaturesContainer}>
           <Text style={[styles.sectionTitle, { color: Colors.text }]}>Premium Features</Text>
           
