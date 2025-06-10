@@ -5,7 +5,7 @@ export interface Meal {
   calories: number;
   date: string;
   method?: 'scan' | 'manual';
-  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  mealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'other';
   notes?: string;
   imageUri?: string;
   protein?: number;
@@ -18,7 +18,7 @@ export interface Stats {
   weekCalories: number;
   monthCalories: number;
   averageDailyCalories: number;
-  weeklyCalorieData: number[];
+  weeklyCalorieData: Array<{day: string; calories: number}>;
   mealTypeCalories: {
     breakfast: number;
     lunch: number;
@@ -48,8 +48,28 @@ export interface UserPreferences {
   reminderTime?: string;
 }
 
-export interface SubscriptionTier {
-  tier: 'free' | 'premium';
-  expiresAt?: string;
-  features: string[];
+export type SubscriptionTier = 'free' | 'premium';
+
+export interface Subscription {
+  tier: SubscriptionTier;
+  startDate: string;
+  endDate: string | null;
+  autoRenew: boolean;
+  status: 'active' | 'canceled' | 'expired';
+  isTrial?: boolean;
+}
+
+export interface SubscriptionFeature {
+  id: string;
+  name: string;
+  description: string;
+  tiers: SubscriptionTier[];
+  icon: string;
+}
+
+export interface PromoCode {
+  code: string;
+  discountPercent: number;
+  expiryDate: string;
+  isUsed: boolean;
 }

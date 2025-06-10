@@ -5,470 +5,324 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  Alert,
-  TextInput,
   ActivityIndicator,
-  Platform
+  Alert
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRouter } from 'expo-router';
 import { 
-  Crown, 
-  Check, 
-  X, 
-  ChevronRight, 
-  Star, 
+  Award, 
+  TrendingUp, 
+  Download, 
+  Edit, 
   Zap, 
-  Shield,
-  Tag,
-  RefreshCw,
-  Gift
+  Check, 
+  X 
 } from 'lucide-react-native';
-import { useSubscriptionStore } from '@/store/subscriptionStore';
-import { SubscriptionTier } from '@/types';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useSubscriptionStore } from '@/store/subscriptionStore';
+import PremiumFeatureModal from '@/components/PremiumFeatureModal';
 
 export default function PremiumScreen() {
   const Colors = useThemeColors();
+  const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
+  const [selectedFeature, setSelectedFeature] = useState('');
+  
   const { 
-    subscription, 
-    features, 
-    setSubscription, 
-    isSubscriptionActive, 
-    getSubscriptionTier,
+    getSubscriptionTier, 
+    isTrialAvailable, 
+    startTrial, 
     getRemainingDays,
-    startTrial,
-    isTrialAvailable,
-    applyPromoCode,
     restorePurchases,
     isLoading
   } = useSubscriptionStore();
   
-  const [promoCode, setPromoCode] = useState('');
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [promoDiscount, setPromoDiscount] = useState(0);
-  
   const currentTier = getSubscriptionTier();
-  const isActive = isSubscriptionActive();
-  const remainingDays = getRemainingDays();
   const canTrial = isTrialAvailable();
+  const remainingDays = getRemainingDays();
   
-  const handleSubscribe = () => {
-    // In a real app, this would open a payment flow
-    Alert.alert(
-      'Subscription',
-      'This would start the payment process for Premium subscription.',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Simulate Purchase',
-          onPress: () => {
-            // Simulate a successful purchase
-            const now = new Date();
-            const endDate = new Date();
-            endDate.setMonth(endDate.getMonth() + 1); // 1 month subscription
-            
-            setSubscription({
-              tier: 'premium',
-              startDate: now.toISOString(),
-              endDate: endDate.toISOString(),
-              autoRenew: true,
-              status: 'active'
-            });
-            
-            // Save for restore purchases demo
-            if (Platform.OS !== 'web') {
-              try {
-                const subscriptionData = {
-                  tier: 'premium',
-                  startDate: now.toISOString(),
-                  endDate: endDate.toISOString(),
-                  autoRenew: true,
-                  status: 'active'
-                };
-                AsyncStorage.setItem('previous-subscription', JSON.stringify(subscriptionData));
-              } catch (error) {
-                console.error('Error saving subscription data:', error);
-              }
-            }
-            
-            setPromoApplied(false);
-            setPromoDiscount(0);
-            setPromoCode('');
-            
-            Alert.alert(
-              'Success',
-              'You are now subscribed to Premium!',
-              [{ text: 'OK' }]
-            );
-          },
-        },
-      ]
-    );
+  const handleFeaturePress = (featureId: string) => {
+    setSelectedFeature(featureId);
+    setShowModal(true);
   };
   
   const handleStartTrial = () => {
-    if (!canTrial) {
-      Alert.alert('Trial Unavailable', 'You have already used your free trial.');
-      return;
-    }
-    
     Alert.alert(
-      'Start Free Trial',
-      'Start your 7-day free trial of Premium? No payment required.',
+      "Start 7-Day Free Trial",
+      "You'll get full access to all premium features for 7 days. No payment required.",
       [
         {
-          text: 'Cancel',
-          style: 'cancel',
+          text: "Cancel",
+          style: "cancel"
         },
         {
-          text: 'Start Trial',
+          text: "Start Trial",
           onPress: () => {
             startTrial('premium');
             Alert.alert(
-              'Trial Started',
-              'Your 7-day free trial of Premium has started. Enjoy!',
-              [{ text: 'OK' }]
+              "Trial Started!",
+              "You now have premium access for 7 days. Enjoy all the features!"
             );
-          },
-        },
+          }
+        }
       ]
     );
   };
   
-  const handleApplyPromo = () => {
-    if (!promoCode.trim()) {
-      Alert.alert('Invalid Code', 'Please enter a valid promo code.');
-      return;
-    }
-    
-    const success = applyPromoCode(promoCode.trim().toUpperCase());
-    
-    if (success) {
-      // For demo purposes, we'll apply a fixed discount
-      setPromoApplied(true);
-      
-      // Determine discount based on the code
-      if (promoCode.toUpperCase() === 'WELCOME25') {
-        setPromoDiscount(25);
-      } else if (promoCode.toUpperCase() === 'SUMMER2025') {
-        setPromoDiscount(30);
-      } else {
-        setPromoDiscount(20); // Default discount
-      }
-      
-      Alert.alert(
-        'Promo Applied',
-        `${promoDiscount}% discount will be applied to your subscription!`
-      );
-    } else {
-      Alert.alert(
-        'Invalid Promo Code',
-        'This promo code is invalid, expired, or has already been used.'
-      );
-      setPromoApplied(false);
-      setPromoDiscount(0);
-    }
+  const handleSubscribe = () => {
+    Alert.alert(
+      "Subscribe to Premium",
+      "This would normally take you to the payment screen. For this demo, we'll simulate a successful subscription.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Subscribe",
+          onPress: async () => {
+            // Simulate subscription
+            const subscription = {
+              tier: 'premium',
+              startDate: new Date().toISOString(),
+              endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+              autoRenew: true,
+              status: 'active'
+            };
+            
+            // Store for restore purchases
+            await AsyncStorage.setItem('previous-subscription', JSON.stringify(subscription));
+            
+            // Update store
+            useSubscriptionStore.getState().setSubscription(subscription);
+            
+            Alert.alert(
+              "Subscribed!",
+              "You now have premium access. Enjoy all the features!"
+            );
+          }
+        }
+      ]
+    );
   };
   
-  const handleRestorePurchases = async () => {
+  const handleRestore = async () => {
     const restored = await restorePurchases();
     
     if (restored) {
       Alert.alert(
-        'Purchases Restored',
-        'Your previous subscription has been restored successfully.'
+        "Purchases Restored",
+        "Your premium subscription has been restored."
       );
     } else {
       Alert.alert(
-        'No Purchases Found',
-        'We couldn\'t find any previous purchases to restore.'
+        "No Purchases Found",
+        "We couldn't find any previous purchases to restore."
       );
     }
-  };
-  
-  const getPlanPrice = () => {
-    let basePrice = 4.99;
-    
-    if (promoApplied) {
-      return (basePrice * (1 - promoDiscount / 100)).toFixed(2);
-    }
-    
-    return basePrice.toFixed(2);
-  };
-  
-  const renderFeatureList = () => {
-    const premiumFeatures = features.filter(feature => feature.tiers.includes('premium'));
-    
-    return (
-      <View style={styles.featureList}>
-        {premiumFeatures.map((feature, index) => (
-          <View key={index} style={styles.featureItem}>
-            <Check size={16} color={Colors.success} />
-            <Text style={[styles.featureText, { color: Colors.text }]}>{feature.name}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
-  
-  const renderNotIncludedFeatures = () => {
-    const notIncludedFeatures = features.filter(feature => !feature.tiers.includes('premium'));
-    
-    if (notIncludedFeatures.length === 0) return null;
-    
-    return (
-      <View style={styles.notIncludedList}>
-        <Text style={[styles.notIncludedTitle, { color: Colors.subtext }]}>Not Included:</Text>
-        {notIncludedFeatures.map((feature, index) => (
-          <View key={index} style={styles.featureItem}>
-            <X size={16} color={Colors.error} />
-            <Text style={[styles.notIncludedText, { color: Colors.subtext }]}>{feature.name}</Text>
-          </View>
-        ))}
-      </View>
-    );
   };
   
   return (
     <ScrollView style={[styles.container, { backgroundColor: Colors.background }]}>
-      {/* Current Subscription Status */}
-      <View style={[styles.statusCard, { backgroundColor: Colors.card }]}>
-        <View style={styles.statusHeader}>
-          <Crown size={24} color={Colors.accent} />
-          <Text style={[styles.statusTitle, { color: Colors.text }]}>
-            {currentTier === 'free' ? 'Free Plan' : 'Premium'}
-          </Text>
-        </View>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: Colors.text }]}>
+          {currentTier === 'premium' ? 'Premium Subscription' : 'Upgrade to Premium'}
+        </Text>
         
-        {currentTier !== 'free' && (
-          <View style={styles.statusDetails}>
-            <Text style={[styles.statusText, { color: Colors.text }]}>
-              Status: {isActive ? 'Active' : 'Inactive'}
-            </Text>
-            {subscription?.isTrial && (
-              <View style={[styles.trialBadge, { backgroundColor: Colors.accent }]}>
-                <Text style={styles.trialBadgeText}>TRIAL</Text>
-              </View>
-            )}
-            {remainingDays > 0 && (
-              <Text style={[styles.statusText, { color: Colors.text }]}>
-                {remainingDays} days remaining
-              </Text>
-            )}
+        {currentTier === 'premium' && (
+          <View style={[styles.statusBadge, { backgroundColor: Colors.accent }]}>
+            <Text style={styles.statusText}>Active</Text>
           </View>
         )}
-        
-        {currentTier === 'free' && (
-          <Text style={[styles.upgradeText, { color: Colors.primary }]}>
-            Upgrade to unlock premium features
-          </Text>
-        )}
-        
-        {currentTier !== 'free' && !isActive && (
-          <TouchableOpacity 
-            style={[styles.renewButton, { backgroundColor: Colors.primary }]}
-            onPress={handleSubscribe}
-          >
-            <Text style={styles.renewButtonText}>Renew Subscription</Text>
-          </TouchableOpacity>
-        )}
       </View>
+      
+      {/* Subscription Status */}
+      {currentTier === 'premium' && (
+        <View style={[styles.statusCard, { backgroundColor: Colors.card }]}>
+          <Award size={24} color={Colors.accent} />
+          <Text style={[styles.statusTitle, { color: Colors.text }]}>
+            Premium Subscription Active
+          </Text>
+          {remainingDays > 0 && (
+            <Text style={[styles.statusSubtitle, { color: Colors.subtext }]}>
+              {remainingDays} days remaining
+            </Text>
+          )}
+        </View>
+      )}
+      
+      {/* Features */}
+      <View style={styles.featuresSection}>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Premium Features</Text>
+        
+        <View style={styles.featuresList}>
+          <TouchableOpacity 
+            style={[styles.featureCard, { backgroundColor: Colors.card }]}
+            onPress={() => handleFeaturePress('advanced_stats')}
+          >
+            <TrendingUp size={24} color={Colors.primary} />
+            <Text style={[styles.featureTitle, { color: Colors.text }]}>
+              Advanced Analytics
+            </Text>
+            <Text style={[styles.featureDescription, { color: Colors.subtext }]}>
+              Get detailed insights and trends about your nutrition
+            </Text>
+            {currentTier === 'premium' && (
+              <View style={[styles.featureAccessBadge, { backgroundColor: Colors.accent }]}>
+                <Check size={16} color="#FFFFFF" />
+                <Text style={styles.featureAccessText}>Included</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.featureCard, { backgroundColor: Colors.card }]}
+            onPress={() => handleFeaturePress('data_export')}
+          >
+            <Download size={24} color={Colors.primary} />
+            <Text style={[styles.featureTitle, { color: Colors.text }]}>
+              Data Export
+            </Text>
+            <Text style={[styles.featureDescription, { color: Colors.subtext }]}>
+              Export your nutrition data in various formats
+            </Text>
+            {currentTier === 'premium' && (
+              <View style={[styles.featureAccessBadge, { backgroundColor: Colors.accent }]}>
+                <Check size={16} color="#FFFFFF" />
+                <Text style={styles.featureAccessText}>Included</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.featureCard, { backgroundColor: Colors.card }]}
+            onPress={() => handleFeaturePress('custom_foods')}
+          >
+            <Edit size={24} color={Colors.primary} />
+            <Text style={[styles.featureTitle, { color: Colors.text }]}>
+              Custom Foods
+            </Text>
+            <Text style={[styles.featureDescription, { color: Colors.subtext }]}>
+              Create and manage your custom foods
+            </Text>
+            {currentTier === 'premium' && (
+              <View style={[styles.featureAccessBadge, { backgroundColor: Colors.accent }]}>
+                <Check size={16} color="#FFFFFF" />
+                <Text style={styles.featureAccessText}>Included</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      {/* Free Features */}
+      <View style={styles.featuresSection}>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Free Features</Text>
+        
+        <View style={[styles.freeFeaturesList, { backgroundColor: Colors.card }]}>
+          <View style={styles.freeFeatureItem}>
+            <Check size={20} color={Colors.success} />
+            <Text style={[styles.freeFeatureText, { color: Colors.text }]}>
+              Basic meal tracking
+            </Text>
+          </View>
+          
+          <View style={styles.freeFeatureItem}>
+            <Check size={20} color={Colors.success} />
+            <Text style={[styles.freeFeatureText, { color: Colors.text }]}>
+              Calorie counting
+            </Text>
+          </View>
+          
+          <View style={styles.freeFeatureItem}>
+            <Check size={20} color={Colors.success} />
+            <Text style={[styles.freeFeatureText, { color: Colors.text }]}>
+              Basic statistics
+            </Text>
+          </View>
+          
+          <View style={styles.freeFeatureItem}>
+            <X size={20} color={Colors.error} />
+            <Text style={[styles.freeFeatureText, { color: Colors.subtext }]}>
+              Advanced analytics
+            </Text>
+          </View>
+          
+          <View style={styles.freeFeatureItem}>
+            <X size={20} color={Colors.error} />
+            <Text style={[styles.freeFeatureText, { color: Colors.subtext }]}>
+              Data export
+            </Text>
+          </View>
+        </View>
+      </View>
+      
+      {/* Pricing */}
+      {currentTier !== 'premium' && (
+        <View style={styles.pricingSection}>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Pricing</Text>
+          
+          <View style={[styles.pricingCard, { backgroundColor: Colors.card }]}>
+            <Text style={[styles.pricingTitle, { color: Colors.text }]}>
+              Premium Subscription
+            </Text>
+            <View style={styles.priceRow}>
+              <Text style={[styles.priceAmount, { color: Colors.text }]}>$4.99</Text>
+              <Text style={[styles.priceInterval, { color: Colors.subtext }]}>/month</Text>
+            </View>
+            <Text style={[styles.pricingDescription, { color: Colors.subtext }]}>
+              Unlock all premium features and support future development
+            </Text>
+            
+            <TouchableOpacity 
+              style={[styles.subscribeButton, { backgroundColor: Colors.primary }]}
+              onPress={handleSubscribe}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <Zap size={20} color="#FFFFFF" />
+                  <Text style={styles.subscribeButtonText}>Subscribe Now</Text>
+                </>
+              )}
+            </TouchableOpacity>
+            
+            {canTrial && (
+              <TouchableOpacity 
+                style={[styles.trialButton, { borderColor: Colors.primary }]}
+                onPress={handleStartTrial}
+                disabled={isLoading}
+              >
+                <Text style={[styles.trialButtonText, { color: Colors.primary }]}>
+                  Start 7-Day Free Trial
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
       
       {/* Restore Purchases */}
       <TouchableOpacity 
-        style={[styles.restoreButton, { borderColor: Colors.border }]}
-        onPress={handleRestorePurchases}
+        style={styles.restoreButton}
+        onPress={handleRestore}
         disabled={isLoading}
       >
-        {isLoading ? (
-          <ActivityIndicator size="small" color={Colors.primary} />
-        ) : (
-          <>
-            <RefreshCw size={16} color={Colors.primary} />
-            <Text style={[styles.restoreButtonText, { color: Colors.primary }]}>
-              Restore Purchases
-            </Text>
-          </>
-        )}
-      </TouchableOpacity>
-      
-      {/* Subscription Plans */}
-      <View style={styles.plansContainer}>
-        <Text style={[styles.plansTitle, { color: Colors.text }]}>Premium Plan</Text>
-        
-        {/* Premium Plan */}
-        <View 
-          style={[
-            styles.planCard, 
-            { backgroundColor: Colors.card },
-            { borderColor: Colors.primary, borderWidth: 2 }
-          ]}
-        >
-          <View style={styles.planHeader}>
-            <View>
-              <Text style={[styles.planTitle, { color: Colors.text }]}>Premium</Text>
-              <View style={styles.priceContainer}>
-                {promoApplied && (
-                  <Text style={[styles.originalPrice, { color: Colors.subtext }]}>
-                    ${4.99}/month
-                  </Text>
-                )}
-                <Text style={[styles.planPrice, { color: Colors.primary }]}>
-                  ${getPlanPrice()}/month
-                </Text>
-              </View>
-            </View>
-            <View style={[styles.selectedBadge, { backgroundColor: Colors.primary }]}>
-              <Check size={16} color="#FFFFFF" />
-            </View>
-          </View>
-          
-          {renderFeatureList()}
-        </View>
-        
-        {/* Promo Code */}
-        <View style={[styles.promoContainer, { backgroundColor: Colors.card }]}>
-          <View style={styles.promoHeader}>
-            <Tag size={20} color={Colors.primary} />
-            <Text style={[styles.promoTitle, { color: Colors.text }]}>Promo Code</Text>
-          </View>
-          <View style={styles.promoInputContainer}>
-            <TextInput
-              style={[styles.promoInput, { 
-                backgroundColor: Colors.background,
-                color: Colors.text,
-                borderColor: Colors.border
-              }]}
-              placeholder="Enter promo code"
-              placeholderTextColor={Colors.subtext}
-              value={promoCode}
-              onChangeText={setPromoCode}
-              autoCapitalize="characters"
-            />
-            <TouchableOpacity 
-              style={[styles.promoButton, { backgroundColor: Colors.primary }]}
-              onPress={handleApplyPromo}
-            >
-              <Text style={styles.promoButtonText}>Apply</Text>
-            </TouchableOpacity>
-          </View>
-          {promoApplied && (
-            <View style={styles.promoApplied}>
-              <Check size={16} color={Colors.success} />
-              <Text style={[styles.promoAppliedText, { color: Colors.success }]}>
-                {promoDiscount}% discount applied!
-              </Text>
-            </View>
-          )}
-        </View>
-      </View>
-      
-      {/* Free Trial Button */}
-      {canTrial && (
-        <TouchableOpacity 
-          style={[styles.trialButton, { backgroundColor: Colors.secondary }]}
-          onPress={handleStartTrial}
-        >
-          <Gift size={20} color="#FFFFFF" />
-          <Text style={styles.trialButtonText}>
-            Start 7-Day Free Trial
-          </Text>
-        </TouchableOpacity>
-      )}
-      
-      {/* Subscribe Button */}
-      <TouchableOpacity 
-        style={[
-          styles.subscribeButton, 
-          { backgroundColor: Colors.primary }
-        ]}
-        onPress={handleSubscribe}
-      >
-        <Text style={styles.subscribeButtonText}>
-          Subscribe to Premium
+        <Text style={[styles.restoreButtonText, { color: Colors.primary }]}>
+          Restore Purchases
         </Text>
       </TouchableOpacity>
       
-      {/* Benefits Section */}
-      <View style={styles.benefitsSection}>
-        <Text style={[styles.benefitsSectionTitle, { color: Colors.text }]}>
-          Why Go Premium?
-        </Text>
-        
-        <View style={[styles.benefitCard, { backgroundColor: Colors.card }]}>
-          <View style={[styles.benefitIcon, { backgroundColor: Colors.primary }]}>
-            <Zap size={24} color="#FFFFFF" />
-          </View>
-          <View style={styles.benefitContent}>
-            <Text style={[styles.benefitTitle, { color: Colors.text }]}>Advanced Analytics</Text>
-            <Text style={[styles.benefitDescription, { color: Colors.subtext }]}>
-              Get detailed insights about your nutrition habits and progress over time.
-            </Text>
-          </View>
-        </View>
-        
-        <View style={[styles.benefitCard, { backgroundColor: Colors.card }]}>
-          <View style={[styles.benefitIcon, { backgroundColor: Colors.primary }]}>
-            <Star size={24} color="#FFFFFF" />
-          </View>
-          <View style={styles.benefitContent}>
-            <Text style={[styles.benefitTitle, { color: Colors.text }]}>Data Export</Text>
-            <Text style={[styles.benefitDescription, { color: Colors.subtext }]}>
-              Export your nutrition data in various formats for external analysis.
-            </Text>
-          </View>
-        </View>
-        
-        <View style={[styles.benefitCard, { backgroundColor: Colors.card }]}>
-          <View style={[styles.benefitIcon, { backgroundColor: Colors.primary }]}>
-            <Shield size={24} color="#FFFFFF" />
-          </View>
-          <View style={styles.benefitContent}>
-            <Text style={[styles.benefitTitle, { color: Colors.text }]}>Ad-Free Experience</Text>
-            <Text style={[styles.benefitDescription, { color: Colors.subtext }]}>
-              Enjoy the app without any advertisements or interruptions.
-            </Text>
-          </View>
-        </View>
-      </View>
-      
-      {/* FAQ Section */}
-      <View style={styles.faqSection}>
-        <Text style={[styles.faqSectionTitle, { color: Colors.text }]}>
-          Frequently Asked Questions
-        </Text>
-        
-        <TouchableOpacity style={[styles.faqItem, { borderBottomColor: Colors.border }]}>
-          <Text style={[styles.faqQuestion, { color: Colors.text }]}>
-            How do I cancel my subscription?
-          </Text>
-          <ChevronRight size={20} color={Colors.primary} />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.faqItem, { borderBottomColor: Colors.border }]}>
-          <Text style={[styles.faqQuestion, { color: Colors.text }]}>
-            Will I lose my data if I downgrade?
-          </Text>
-          <ChevronRight size={20} color={Colors.primary} />
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={[styles.faqItem, { borderBottomColor: Colors.border }]}>
-          <Text style={[styles.faqQuestion, { color: Colors.text }]}>
-            How does the free trial work?
-          </Text>
-          <ChevronRight size={20} color={Colors.primary} />
-        </TouchableOpacity>
-      </View>
-      
-      {/* Terms and Privacy */}
-      <View style={styles.termsSection}>
-        <Text style={[styles.termsText, { color: Colors.subtext }]}>
-          By subscribing, you agree to our Terms of Service and Privacy Policy. Subscriptions automatically renew unless auto-renew is turned off at least 24 hours before the end of the current period.
-        </Text>
-      </View>
+      {/* Feature Modal */}
+      <PremiumFeatureModal
+        visible={showModal}
+        featureId={selectedFeature}
+        onClose={() => setShowModal(false)}
+      />
     </ScrollView>
   );
 }
@@ -477,72 +331,59 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    padding: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  statusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
+  },
   statusCard: {
     margin: 16,
     padding: 16,
     borderRadius: 12,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
-  },
-  statusHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
   },
   statusTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  statusDetails: {
+    fontWeight: '600',
     marginTop: 8,
   },
-  statusText: {
+  statusSubtitle: {
     fontSize: 14,
-    marginBottom: 4,
+    marginTop: 4,
   },
-  upgradeText: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginTop: 8,
+  featuresSection: {
+    marginTop: 16,
   },
-  renewButton: {
-    borderRadius: 8,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  renewButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '500',
-  },
-  restoreButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
     marginHorizontal: 16,
-    marginBottom: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    borderWidth: 1,
+    marginBottom: 8,
   },
-  restoreButtonText: {
-    marginLeft: 8,
-    fontWeight: '500',
+  featuresList: {
+    paddingHorizontal: 16,
   },
-  plansContainer: {
-    padding: 16,
-  },
-  plansTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  planCard: {
+  featureCard: {
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -552,221 +393,117 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  planHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  planTitle: {
+  featureTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 4,
   },
-  priceContainer: {
+  featureDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  featureAccessBadge: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 4,
-  },
-  originalPrice: {
-    fontSize: 14,
-    textDecorationLine: 'line-through',
-    marginRight: 6,
-  },
-  planPrice: {
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  selectedBadge: {
-    width: 24,
-    height: 24,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
-  featureList: {
-    marginBottom: 16,
+  featureAccessText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
   },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  featureText: {
-    marginLeft: 8,
-    fontSize: 14,
-  },
-  notIncludedList: {
-    marginTop: 8,
-  },
-  notIncludedTitle: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
-  },
-  notIncludedText: {
-    marginLeft: 8,
-    fontSize: 14,
-  },
-  promoContainer: {
+  freeFeaturesList: {
+    margin: 16,
     borderRadius: 12,
     padding: 16,
-    marginTop: 8,
-    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  promoHeader: {
+  freeFeatureItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-  promoTitle: {
+  freeFeatureText: {
     fontSize: 16,
+    marginLeft: 12,
+  },
+  pricingSection: {
+    marginTop: 16,
+  },
+  pricingCard: {
+    margin: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  pricingTitle: {
+    fontSize: 18,
     fontWeight: '600',
-    marginLeft: 8,
   },
-  promoInputContainer: {
+  priceRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'baseline',
+    marginVertical: 8,
   },
-  promoInput: {
-    flex: 1,
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    marginRight: 8,
+  priceAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
   },
-  promoButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+  priceInterval: {
+    fontSize: 16,
+    marginLeft: 4,
   },
-  promoButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '500',
+  pricingDescription: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 16,
   },
-  promoApplied: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  promoAppliedText: {
-    marginLeft: 8,
-    fontWeight: '500',
-  },
-  trialButton: {
+  subscribeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    margin: 16,
-    marginTop: 0,
-    borderRadius: 12,
-    paddingVertical: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  trialButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
-  trialBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginVertical: 4,
-  },
-  trialBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: 'bold',
-  },
-  subscribeButton: {
-    margin: 16,
-    marginTop: 8,
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 12,
   },
   subscribeButtonText: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    marginLeft: 8,
   },
-  benefitsSection: {
-    padding: 16,
-  },
-  benefitsSectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  benefitCard: {
-    flexDirection: 'row',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  benefitIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
+  trialButton: {
     alignItems: 'center',
-    marginRight: 16,
+    justifyContent: 'center',
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
   },
-  benefitContent: {
-    flex: 1,
-  },
-  benefitTitle: {
+  trialButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
   },
-  benefitDescription: {
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  faqSection: {
-    padding: 16,
-  },
-  faqSectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  faqItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  restoreButton: {
     alignItems: 'center',
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
-  faqQuestion: {
-    fontSize: 16,
-    flex: 1,
-  },
-  termsSection: {
     padding: 16,
     marginBottom: 24,
   },
-  termsText: {
-    fontSize: 12,
-    lineHeight: 18,
-    textAlign: 'center',
+  restoreButtonText: {
+    fontSize: 14,
   },
 });

@@ -2,22 +2,23 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Stats, Meal } from '@/types';
-import { 
-  getCaloriesForDate, 
-  getCaloriesForWeek, 
-  getCaloriesForMonth, 
-  getCaloriesByMealType, 
-  getAverageDailyCalories, 
-  getCaloriesPerDayForWeek, 
-  getMostCommonFoods 
+import {
+  getCaloriesForDate,
+  getCaloriesForWeek,
+  getCaloriesForMonth,
+  getCaloriesPerDayForWeek,
+  getMostCommonFoods,
+  getCaloriesByMealType,
+  getAverageDailyCalories
 } from '@/utils/calorieHelpers';
+import { getDaysOfWeek } from '@/utils/dateHelpers';
 
 interface StatsState {
   todayCalories: number;
   weekCalories: number;
   monthCalories: number;
   averageDailyCalories: number;
-  weeklyCalorieData: number[];
+  weeklyCalorieData: Array<{day: string; calories: number}>;
   mealTypeCalories: {
     breakfast: number;
     lunch: number;
@@ -41,18 +42,16 @@ interface StatsState {
   
   // Actions
   fetchStats: () => Promise<void>;
-  updateStats: (stats: Partial<Stats>) => void;
-  resetStats: () => void;
   updateStatsWithNewMeal: (meal: Meal) => void;
 }
 
-// Default stats for initial state
-const DEFAULT_STATS: Stats = {
+// Initial state
+const initialStats: Stats = {
   todayCalories: 0,
   weekCalories: 0,
   monthCalories: 0,
   averageDailyCalories: 0,
-  weeklyCalorieData: [0, 0, 0, 0, 0, 0, 0],
+  weeklyCalorieData: getDaysOfWeek().map(day => ({ day, calories: 0 })),
   mealTypeCalories: {
     breakfast: 0,
     lunch: 0,
@@ -73,48 +72,49 @@ const DEFAULT_STATS: Stats = {
 export const useStatsStore = create<StatsState>()(
   persist(
     (set, get) => ({
-      ...DEFAULT_STATS,
+      ...initialStats,
       isLoading: false,
       error: null,
       
       fetchStats: async () => {
         set({ isLoading: true, error: null });
-        
         try {
-          // Get today's date as ISO string
+          // Get today's date
           const today = new Date().toISOString();
           
-          // Get calories for today
-          const todayCalories = await getCaloriesForDate(today);
+          // Fetch all stats in parallel
+          const [
+            todayCalories,
+            weekCalories,
+            monthCalories,
+            weeklyCalorieData,
+            mealTypeCalories,
+            commonFoods,
+            averageDailyCalories,
+            streakData
+          ] = await Promise.all([
+            getCaloriesForDate(today),
+            getCaloriesForWeek(),
+            getCaloriesForMonth(),
+            getCaloriesPerDayForWeek(),
+            getCaloriesByMealType(),
+            getMostCommonFoods(5),
+            getAverageDailyCalories(),
+            AsyncStorage.getItem('streak-data').then(data => 
+              data ? JSON.parse(data) : { currentStreak: 0, longestStreak: 0 }
+            )
+          ]);
           
-          // Get calories for the week
-          const weekCalories = await getCaloriesForWeek();
-          
-          // Get calories for the month
-          const monthCalories = await getCaloriesForMonth();
-          
-          // Get average daily calories
-          const averageDailyCalories = await getAverageDailyCalories();
-          
-          // Get calories per day for the week
-          const caloriesPerDay = await getCaloriesPerDayForWeek();
-          const weeklyCalorieData = caloriesPerDay.map(day => day.calories);
-          
-          // Get calories by meal type
-          const mealTypeCalories = await getCaloriesByMealType();
-          
-          // Get most common foods
-          const commonFoods = await getMostCommonFoods(5);
-          
-          // Update state with all fetched data
           set({
             todayCalories,
             weekCalories,
             monthCalories,
-            averageDailyCalories,
             weeklyCalorieData,
             mealTypeCalories,
             commonFoods,
+            averageDailyCalories,
+            currentStreak: streakData.currentStreak,
+            longestStreak: streakData.longestStreak,
             isLoading: false
           });
         } catch (error) {
@@ -123,62 +123,72 @@ export const useStatsStore = create<StatsState>()(
         }
       },
       
-      updateStats: (newStats) => {
-        set(state => ({
-          ...state,
-          ...newStats
-        }));
-      },
-      
-      resetStats: () => {
-        set(DEFAULT_STATS);
-      },
-      
-      updateStatsWithNewMeal: (meal) => {
+      updateStatsWithNewMeal: (meal: Meal) => {
         // Update today's calories
+        set(state => ({
+          todayCalories: state.todayCalories + (meal.calories || 0)
+        }));
+        
+        // Update week calories
+        set(state => ({
+          weekCalories: state.weekCalories + (meal.calories || 0)
+        }));
+        
+        // Update month calories
+        set(state => ({
+          monthCalories: state.monthCalories + (meal.calories || 0)
+        }));
+        
+        // Update weekly calorie data for today
+        const today = new Date();
+        const dayIndex = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        
         set(state => {
-          const calories = meal.calories || 0;
-          const protein = meal.protein || 0;
-          const carbs = meal.carbs || 0;
-          const fat = meal.fat || 0;
-          
-          // Update meal type calories
-          const mealType = meal.mealType || 'other';
-          const updatedMealTypeCalories = { ...state.mealTypeCalories };
-          
-          if (mealType === 'breakfast') {
-            updatedMealTypeCalories.breakfast += calories;
-          } else if (mealType === 'lunch') {
-            updatedMealTypeCalories.lunch += calories;
-          } else if (mealType === 'dinner') {
-            updatedMealTypeCalories.dinner += calories;
-          } else if (mealType === 'snack') {
-            updatedMealTypeCalories.snack += calories;
-          } else {
-            updatedMealTypeCalories.other += calories;
-          }
-          
-          // Update macros
-          const updatedMacros = {
-            protein: state.macros.protein + protein,
-            carbs: state.macros.carbs + carbs,
-            fat: state.macros.fat + fat
-          };
-          
-          // Update weekly data - find today's index in the week
-          const today = new Date();
-          const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
-          const weeklyData = [...state.weeklyCalorieData];
-          weeklyData[dayOfWeek] += calories;
-          
-          // Update common foods
-          let updatedCommonFoods = [...state.commonFoods];
-          const foodName = meal.food || meal.name || '';
-          
-          if (foodName) {
-            const existingFoodIndex = updatedCommonFoods.findIndex(
-              item => item.food.toLowerCase() === foodName.toLowerCase()
+          const updatedWeeklyData = [...state.weeklyCalorieData];
+          updatedWeeklyData[dayIndex].calories += (meal.calories || 0);
+          return { weeklyCalorieData: updatedWeeklyData };
+        });
+        
+        // Update meal type calories
+        if (meal.mealType) {
+          set(state => {
+            const updatedMealTypeCalories = { ...state.mealTypeCalories };
+            updatedMealTypeCalories[meal.mealType as keyof typeof updatedMealTypeCalories] += 
+              (meal.calories || 0);
+            return { mealTypeCalories: updatedMealTypeCalories };
+          });
+        } else {
+          // If no meal type specified, add to "other"
+          set(state => ({
+            mealTypeCalories: {
+              ...state.mealTypeCalories,
+              other: state.mealTypeCalories.other + (meal.calories || 0)
+            }
+          }));
+        }
+        
+        // Update macros if available
+        if (meal.protein || meal.carbs || meal.fat) {
+          set(state => ({
+            macros: {
+              protein: state.macros.protein + (meal.protein || 0),
+              carbs: state.macros.carbs + (meal.carbs || 0),
+              fat: state.macros.fat + (meal.fat || 0)
+            }
+          }));
+        }
+        
+        // Update common foods (this is a simplified approach)
+        // In a real app, you'd need to recalculate the most common foods
+        const foodName = meal.food || meal.name;
+        if (foodName) {
+          set(state => {
+            // Check if this food is already in the common foods list
+            const existingFoodIndex = state.commonFoods.findIndex(
+              item => item.food === foodName
             );
+            
+            let updatedCommonFoods = [...state.commonFoods];
             
             if (existingFoodIndex >= 0) {
               // Update existing food count
@@ -187,31 +197,20 @@ export const useStatsStore = create<StatsState>()(
                 count: updatedCommonFoods[existingFoodIndex].count + 1
               };
               
-              // Re-sort by count
+              // Sort by count (descending)
               updatedCommonFoods.sort((a, b) => b.count - a.count);
-            } else {
-              // Add new food
+            } else if (updatedCommonFoods.length < 5) {
+              // Add new food if we have less than 5
               updatedCommonFoods.push({ food: foodName, count: 1 });
-              
-              // Sort and limit to top 5
+            } else {
+              // Replace the least common food if this is new
+              updatedCommonFoods[4] = { food: foodName, count: 1 };
               updatedCommonFoods.sort((a, b) => b.count - a.count);
-              if (updatedCommonFoods.length > 5) {
-                updatedCommonFoods = updatedCommonFoods.slice(0, 5);
-              }
             }
-          }
-          
-          return {
-            ...state,
-            todayCalories: state.todayCalories + calories,
-            weekCalories: state.weekCalories + calories,
-            monthCalories: state.monthCalories + calories,
-            mealTypeCalories: updatedMealTypeCalories,
-            macros: updatedMacros,
-            weeklyCalorieData: weeklyData,
-            commonFoods: updatedCommonFoods
-          };
-        });
+            
+            return { commonFoods: updatedCommonFoods };
+          });
+        }
       }
     }),
     {
@@ -227,7 +226,7 @@ export const useStatsStore = create<StatsState>()(
         macros: state.macros,
         commonFoods: state.commonFoods,
         currentStreak: state.currentStreak,
-        longestStreak: state.longestStreak
+        longestStreak: state.longestStreak,
       }),
     }
   )
