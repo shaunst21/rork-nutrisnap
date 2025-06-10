@@ -23,7 +23,11 @@ import {
   CreditCard,
   LogOut,
   Users,
-  Gift
+  Gift,
+  Headphones,
+  Maximize,
+  Database,
+  Cpu
 } from 'lucide-react-native';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import { useThemeStore } from '@/store/themeStore';
@@ -46,16 +50,25 @@ export default function SettingsScreen() {
     getRemainingDays,
     isTrialAvailable,
     restorePurchases,
-    isLoading
+    isLoading,
+    hasFeature
   } = useSubscriptionStore();
   
   const [dailyGoal, setDailyGoal] = useState(preferences.dailyCalorieGoal.toString());
   const [weeklyGoal, setWeeklyGoal] = useState(preferences.weeklyCalorieGoal.toString());
+  const [proteinGoal, setProteinGoal] = useState(preferences.macroGoals?.protein?.toString() || '0');
+  const [carbsGoal, setCarbsGoal] = useState(preferences.macroGoals?.carbs?.toString() || '0');
+  const [fatGoal, setFatGoal] = useState(preferences.macroGoals?.fat?.toString() || '0');
   
   const currentTier = getSubscriptionTier();
   const isActive = isSubscriptionActive();
   const remainingDays = getRemainingDays();
   const canTrial = isTrialAvailable();
+  
+  const hasCustomMacrosFeature = hasFeature('custom_foods');
+  const hasBarcodeFeature = hasFeature('barcode_scanning');
+  const hasPrioritySupportFeature = hasFeature('priority_support');
+  const hasAiCoachFeature = hasFeature('ai_coach');
   
   const handleSaveGoals = () => {
     const dailyGoalNum = parseInt(dailyGoal, 10);
@@ -71,12 +84,27 @@ export default function SettingsScreen() {
       return;
     }
     
-    updatePreferences({
+    const updatedPreferences: any = {
       dailyCalorieGoal: dailyGoalNum,
       weeklyCalorieGoal: weeklyGoalNum,
-    });
+    };
     
-    Alert.alert('Success', 'Calorie goals updated successfully');
+    // Only save macro goals if the feature is available
+    if (hasCustomMacrosFeature) {
+      const proteinGoalNum = parseInt(proteinGoal, 10) || 0;
+      const carbsGoalNum = parseInt(carbsGoal, 10) || 0;
+      const fatGoalNum = parseInt(fatGoal, 10) || 0;
+      
+      updatedPreferences.macroGoals = {
+        protein: proteinGoalNum,
+        carbs: carbsGoalNum,
+        fat: fatGoalNum
+      };
+    }
+    
+    updatePreferences(updatedPreferences);
+    
+    Alert.alert('Success', 'Nutrition goals updated successfully');
   };
   
   const toggleNotifications = () => {
@@ -170,6 +198,25 @@ export default function SettingsScreen() {
         },
       ]
     );
+  };
+  
+  const navigateToPremiumFeature = (feature: string) => {
+    switch (feature) {
+      case 'barcode_scanning':
+        router.push('/barcode-scanner');
+        break;
+      case 'custom_foods':
+        router.push('/custom-foods');
+        break;
+      case 'ai_coach':
+        router.push('/ai-coach');
+        break;
+      case 'priority_support':
+        router.push('/support');
+        break;
+      default:
+        break;
+    }
   };
   
   return (
@@ -288,8 +335,47 @@ export default function SettingsScreen() {
         </View>
       )}
       
+      {/* Premium Features Section */}
+      {(currentTier === 'premium_plus' || currentTier === 'family') && (
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Premium Features</Text>
+          
+          <TouchableOpacity 
+            style={[styles.featureButton, { borderBottomColor: Colors.border }]}
+            onPress={() => navigateToPremiumFeature('barcode_scanning')}
+          >
+            <Maximize size={20} color={Colors.primary} />
+            <Text style={[styles.featureButtonText, { color: Colors.text }]}>Barcode Scanner</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.featureButton, { borderBottomColor: Colors.border }]}
+            onPress={() => navigateToPremiumFeature('custom_foods')}
+          >
+            <Database size={20} color={Colors.primary} />
+            <Text style={[styles.featureButtonText, { color: Colors.text }]}>Custom Foods</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.featureButton, { borderBottomColor: Colors.border }]}
+            onPress={() => navigateToPremiumFeature('ai_coach')}
+          >
+            <Cpu size={20} color={Colors.primary} />
+            <Text style={[styles.featureButtonText, { color: Colors.text }]}>AI Nutrition Coach</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.featureButton, { borderBottomColor: Colors.border }]}
+            onPress={() => navigateToPremiumFeature('priority_support')}
+          >
+            <Headphones size={20} color={Colors.primary} />
+            <Text style={[styles.featureButtonText, { color: Colors.text }]}>Priority Support</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      
       <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Calorie Goals</Text>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Nutrition Goals</Text>
         
         <View style={[styles.settingItem, { borderBottomColor: Colors.border }]}>
           <View style={styles.settingHeader}>
@@ -337,11 +423,78 @@ export default function SettingsScreen() {
           />
         </View>
         
+        {hasCustomMacrosFeature && (
+          <View style={styles.macroGoalsContainer}>
+            <Text style={[styles.macroGoalsTitle, { color: Colors.text }]}>
+              Custom Macro Goals (g)
+            </Text>
+            
+            <View style={styles.macroGoalsGrid}>
+              <View style={styles.macroGoalItem}>
+                <Text style={[styles.macroGoalLabel, { color: Colors.macros.protein }]}>Protein</Text>
+                <TextInput
+                  style={[
+                    styles.macroInput, 
+                    { 
+                      backgroundColor: Colors.card,
+                      borderColor: Colors.border,
+                      color: Colors.text
+                    }
+                  ]}
+                  value={proteinGoal}
+                  onChangeText={setProteinGoal}
+                  keyboardType="number-pad"
+                  placeholder="0"
+                  placeholderTextColor={Colors.mediumGray}
+                />
+              </View>
+              
+              <View style={styles.macroGoalItem}>
+                <Text style={[styles.macroGoalLabel, { color: Colors.macros.carbs }]}>Carbs</Text>
+                <TextInput
+                  style={[
+                    styles.macroInput, 
+                    { 
+                      backgroundColor: Colors.card,
+                      borderColor: Colors.border,
+                      color: Colors.text
+                    }
+                  ]}
+                  value={carbsGoal}
+                  onChangeText={setCarbsGoal}
+                  keyboardType="number-pad"
+                  placeholder="0"
+                  placeholderTextColor={Colors.mediumGray}
+                />
+              </View>
+              
+              <View style={styles.macroGoalItem}>
+                <Text style={[styles.macroGoalLabel, { color: Colors.macros.fat }]}>Fat</Text>
+                <TextInput
+                  style={[
+                    styles.macroInput, 
+                    { 
+                      backgroundColor: Colors.card,
+                      borderColor: Colors.border,
+                      color: Colors.text
+                    }
+                  ]}
+                  value={fatGoal}
+                  onChangeText={setFatGoal}
+                  keyboardType="number-pad"
+                  placeholder="0"
+                  placeholderTextColor={Colors.mediumGray}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+        
         <TouchableOpacity 
           style={[styles.saveButton, { backgroundColor: Colors.primary }]} 
           onPress={handleSaveGoals}
         >
-          <Text style={styles.saveButtonText}>Save Calorie Goals</Text>
+          <Text style={styles.saveButtonText}>Save Nutrition Goals</Text>
         </TouchableOpacity>
       </View>
       
@@ -425,7 +578,10 @@ export default function SettingsScreen() {
           <Text style={[styles.aboutButtonText, { color: Colors.text }]}>Privacy Policy</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={[styles.aboutButton, { borderBottomColor: Colors.border }]}>
+        <TouchableOpacity 
+          style={[styles.aboutButton, { borderBottomColor: Colors.border }]}
+          onPress={() => hasPrioritySupportFeature ? router.push('/support') : router.push('/premium')}
+        >
           <HelpCircle size={20} color={Colors.primary} />
           <Text style={[styles.aboutButtonText, { color: Colors.text }]}>Help & Support</Text>
         </TouchableOpacity>
@@ -467,6 +623,37 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 8,
     width: 100,
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  macroGoalsContainer: {
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  macroGoalsTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 12,
+  },
+  macroGoalsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  macroGoalItem: {
+    flex: 1,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  macroGoalLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  macroInput: {
+    borderRadius: 8,
+    borderWidth: 1,
+    padding: 8,
+    width: '100%',
     textAlign: 'center',
     fontSize: 16,
   },
@@ -627,5 +814,15 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  featureButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+  },
+  featureButtonText: {
+    fontSize: 16,
+    marginLeft: 12,
   },
 });

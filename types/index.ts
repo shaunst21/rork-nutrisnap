@@ -1,143 +1,118 @@
-export interface Meal {
-  id: string;
-  food: string;
-  calories: number;
-  date: string;
-  method: 'scan' | 'manual' | 'api';
-  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-  notes?: string;
-  image?: string;
-  macros?: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
+export type SubscriptionTier = 'free' | 'premium' | 'premium_plus' | 'family';
+
+export interface Subscription {
+  tier: SubscriptionTier;
+  startDate: string;
+  endDate: string | null;
+  autoRenew: boolean;
+  status: 'active' | 'canceled' | 'expired';
+  isTrial?: boolean;
+  familyMembers?: string[];
 }
 
-export interface User {
+export interface SubscriptionFeature {
   id: string;
   name: string;
-  email: string;
-  photoURL?: string;
-  calorieGoal: number;
+  description: string;
+  tiers: SubscriptionTier[];
+  icon: string;
+}
+
+export interface PromoCode {
+  code: string;
+  discountPercent: number;
+  expiryDate: string;
+  isUsed: boolean;
+}
+
+export interface Meal {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack' | 'other';
+  date: string;
+  imageUri?: string;
+  foods?: Food[];
+}
+
+export interface Food {
+  id: string;
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  servingSize: string;
+  quantity: number;
+}
+
+export interface UserPreferences {
+  dailyCalorieGoal: number;
+  weeklyCalorieGoal: number;
+  notifications: boolean;
+  theme: 'light' | 'dark' | 'system';
   macroGoals?: {
     protein: number;
     carbs: number;
     fat: number;
   };
-  streak: number;
-  lastActive: string;
-  isPremium: boolean;
 }
 
-export interface DailyStats {
-  date: string;
-  totalCalories: number;
-  mealCounts: {
+export interface Stats {
+  todayCalories: number;
+  weekCalories: number;
+  monthCalories: number;
+  averageDailyCalories: number;
+  weeklyCalorieData: number[];
+  mealTypeCalories: {
     breakfast: number;
     lunch: number;
     dinner: number;
     snack: number;
+    other: number;
   };
-  macros?: {
+  macros: {
     protein: number;
     carbs: number;
     fat: number;
   };
-}
-
-export interface WeeklyStats {
-  startDate: string;
-  endDate: string;
-  totalCalories: number;
-  averageCalories: number;
-  dailyStats: DailyStats[];
-  macros?: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-}
-
-export interface MonthlyStats {
-  month: string;
-  year: number;
-  totalCalories: number;
-  averageCalories: number;
-  weeklyStats: WeeklyStats[];
-  macros?: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-}
-
-export interface Subscription {
-  id: string;
-  userId: string;
-  plan: 'monthly' | 'yearly' | 'family';
-  startDate: string;
-  endDate: string;
-  isActive: boolean;
-  autoRenew: boolean;
-  paymentMethod: string;
-}
-
-export interface Recipe {
-  id: string;
-  name: string;
-  description: string;
-  ingredients: string[];
-  instructions: string[];
-  prepTime: number;
-  cookTime: number;
-  servings: number;
-  calories: number;
-  image?: string;
-  macros?: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-  tags: string[];
-  isFavorite: boolean;
-}
-
-export interface MealPlan {
-  id: string;
-  name: string;
-  description: string;
-  days: {
-    day: string;
-    meals: {
-      mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
-      recipeId: string;
-      recipeName: string;
-      calories: number;
-      macros?: {
-        protein: number;
-        carbs: number;
-        fat: number;
-      };
-    }[];
+  commonFoods: {
+    food: string;
+    count: number;
   }[];
-  totalCalories: number;
-  macros?: {
-    protein: number;
-    carbs: number;
-    fat: number;
+  currentStreak: number;
+  longestStreak: number;
+}
+
+export interface ExportData {
+  meals: Meal[];
+  stats: {
+    todayCalories: number;
+    weekCalories: number;
+    monthCalories: number;
+    averageDailyCalories: number;
+    commonFoods: {
+      food: string;
+      count: number;
+    }[];
+    currentStreak: number;
+    longestStreak: number;
+    macros: {
+      protein: number;
+      carbs: number;
+      fat: number;
+    };
   };
-  isActive: boolean;
+  preferences: UserPreferences;
 }
 
 export interface FamilyMember {
   id: string;
-  name: string;
-  relationship: string;
-  calorieGoal: number;
-  macroGoals?: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
+  email: string;
+  name?: string;
+  status: 'active' | 'pending' | 'expired';
+  joinedDate?: string;
 }

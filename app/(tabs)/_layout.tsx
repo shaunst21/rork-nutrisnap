@@ -1,14 +1,25 @@
+import React from 'react';
 import { Tabs } from 'expo-router';
-import { useColorScheme } from 'react-native';
-import { Home, BarChart2, History, Camera, Settings, Crown } from 'lucide-react-native';
+import { 
+  Home, 
+  History, 
+  Camera, 
+  BarChart2, 
+  Settings,
+  Crown,
+  BookOpen,
+  Calendar
+} from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useThemeStore } from '@/store/themeStore';
+import { useSubscriptionStore } from '@/store/subscriptionStore';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const { theme } = useThemeStore();
   const Colors = useThemeColors();
-
+  const { hasFeature } = useSubscriptionStore();
+  
+  const hasRecipeSuggestionsFeature = hasFeature('recipe_suggestions');
+  const hasMealPlanningFeature = hasFeature('meal_planning');
+  
   return (
     <Tabs
       screenOptions={{
@@ -52,6 +63,24 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <BarChart2 size={24} color={color} />,
         }}
       />
+      {hasRecipeSuggestionsFeature && (
+        <Tabs.Screen
+          name="recipes"
+          options={{
+            title: 'Recipes',
+            tabBarIcon: ({ color }) => <BookOpen size={24} color={color} />,
+          }}
+        />
+      )}
+      {hasMealPlanningFeature && (
+        <Tabs.Screen
+          name="meal-plans"
+          options={{
+            title: 'Meal Plans',
+            tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
+          }}
+        />
+      )}
       <Tabs.Screen
         name="premium"
         options={{
@@ -64,20 +93,6 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="recipes"
-        options={{
-          title: 'Recipes',
-          href: null, // Hide this tab from the tab bar
-        }}
-      />
-      <Tabs.Screen
-        name="meal-plans"
-        options={{
-          title: 'Meal Plans',
-          href: null, // Hide this tab from the tab bar
         }}
       />
     </Tabs>

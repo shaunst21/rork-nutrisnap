@@ -1,159 +1,255 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
+import React, { useEffect } from 'react';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  ScrollView, 
+  TouchableOpacity, 
+  Image
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Camera, Plus, TrendingUp, Award, Target } from 'lucide-react-native';
-import { useMealStore } from '@/store/mealStore';
-import { useStatsStore } from '@/store/statsStore';
-import { usePreferencesStore } from '@/store/preferencesStore';
+import { 
+  Plus, 
+  TrendingUp, 
+  Award, 
+  Calendar, 
+  BookOpen,
+  Cpu,
+  Maximize,
+  Database
+} from 'lucide-react-native';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSubscriptionStore } from '@/store/subscriptionStore';
-import MealCard from '@/components/MealCard';
-import StatCard from '@/components/StatCard';
-import EmptyState from '@/components/EmptyState';
 import CalorieGoalProgress from '@/components/CalorieGoalProgress';
 import SubscriptionBanner from '@/components/SubscriptionBanner';
-import { checkAndUpdateStreak } from '@/utils/streakHelpers';
-import { formatDate } from '@/utils/dateHelpers';
-import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function HomeScreen() {
-  const router = useRouter();
-  const [refreshing, setRefreshing] = useState(false);
   const Colors = useThemeColors();
-  
-  const { meals, fetchMeals, syncOfflineMeals } = useMealStore();
+  const router = useRouter();
   const { 
-    todayCalories, 
-    currentStreak, 
-    longestStreak,
-    fetchStats 
-  } = useStatsStore();
-  const { preferences } = usePreferencesStore();
-  const { getSubscriptionTier } = useSubscriptionStore();
+    hasFeature, 
+    isTrialAvailable, 
+    getSubscriptionTier 
+  } = useSubscriptionStore();
   
   const currentTier = getSubscriptionTier();
-  const showPremiumBanner = currentTier === 'free';
+  const canTrial = isTrialAvailable();
   
-  // Get today's meals
-  const todayMeals = meals.filter(meal => {
-    const mealDate = new Date(meal.date);
-    const today = new Date();
-    return (
-      mealDate.getDate() === today.getDate() &&
-      mealDate.getMonth() === today.getMonth() &&
-      mealDate.getFullYear() === today.getFullYear()
-    );
-  }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  
-  useEffect(() => {
-    loadData();
-    checkAndUpdateStreak();
-  }, []);
-  
-  const loadData = async () => {
-    await fetchMeals();
-    await fetchStats();
-    await syncOfflineMeals();
-  };
-  
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadData();
-    setRefreshing(false);
-  };
-  
-  const handleScan = () => {
-    router.push('/scan');
-  };
-  
-  const handleManualEntry = () => {
-    router.push('/manual-entry');
-  };
+  const hasRecipeSuggestionsFeature = hasFeature('recipe_suggestions');
+  const hasMealPlanningFeature = hasFeature('meal_planning');
+  const hasAiCoachFeature = hasFeature('ai_coach');
+  const hasBarcodeFeature = hasFeature('barcode_scanning');
+  const hasCustomFoodsFeature = hasFeature('custom_foods');
   
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: Colors.background }]}
-      contentContainerStyle={styles.contentContainer}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <ScrollView style={[styles.container, { backgroundColor: Colors.background }]}>
       <View style={styles.header}>
-        <Text style={[styles.greeting, { color: Colors.text }]}>Hello!</Text>
-        <Text style={[styles.subtitle, { color: Colors.subtext }]}>Track your nutrition today</Text>
-      </View>
-      
-      {/* Premium Banner */}
-      {showPremiumBanner && <SubscriptionBanner />}
-      
-      {/* Calorie Goal Progress */}
-      <CalorieGoalProgress 
-        current={todayCalories} 
-        goal={preferences.dailyCalorieGoal} 
-      />
-      
-      <View style={styles.statsContainer}>
-        <StatCard
-          title="Today's Calories"
-          value={todayCalories}
-          icon={<TrendingUp size={24} color={Colors.primary} />}
-        />
-        
-        <StatCard
-          title="Current Streak"
-          value={`${currentStreak} day${currentStreak !== 1 ? 's' : ''}`}
-          icon={<Award size={24} color={Colors.accent} />}
-          color={Colors.accent}
-        />
-      </View>
-      
-      <View style={styles.actionsContainer}>
+        <View>
+          <Text style={[styles.greeting, { color: Colors.text }]}>Good morning,</Text>
+          <Text style={[styles.userName, { color: Colors.text }]}>User</Text>
+        </View>
         <TouchableOpacity 
-          style={[styles.actionButton, { backgroundColor: Colors.card }]} 
-          onPress={handleScan}
+          style={[styles.addButton, { backgroundColor: Colors.primary }]}
+          onPress={() => router.push('/scan-tab')}
         >
-          <View style={[styles.actionIcon, { backgroundColor: Colors.primary }]}>
-            <Camera size={24} color="#FFFFFF" />
-          </View>
-          <Text style={[styles.actionText, { color: Colors.text }]}>Scan Food</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.actionButton, { backgroundColor: Colors.card }]} 
-          onPress={handleManualEntry}
-        >
-          <View style={[styles.actionIcon, { backgroundColor: Colors.secondary }]}>
-            <Plus size={24} color="#FFFFFF" />
-          </View>
-          <Text style={[styles.actionText, { color: Colors.text }]}>Add Manually</Text>
+          <Plus size={20} color="#FFFFFF" />
+          <Text style={styles.addButtonText}>Add Food</Text>
         </TouchableOpacity>
       </View>
       
-      <View style={styles.mealsSection}>
+      {/* Calorie Progress */}
+      <CalorieGoalProgress />
+      
+      {/* Premium Banner (if not premium) */}
+      {currentTier === 'free' && (
+        <SubscriptionBanner canTrial={canTrial} />
+      )}
+      
+      {/* Quick Actions */}
+      <View style={styles.quickActionsContainer}>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Quick Actions</Text>
+        
+        <View style={styles.quickActions}>
+          <TouchableOpacity 
+            style={[styles.quickActionItem, { backgroundColor: Colors.card }]}
+            onPress={() => router.push('/scan')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: Colors.primary }]}>
+              <Calendar size={20} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.quickActionText, { color: Colors.text }]}>Log Meal</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.quickActionItem, { backgroundColor: Colors.card }]}
+            onPress={() => router.push('/stats')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: Colors.accent }]}>
+              <TrendingUp size={20} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.quickActionText, { color: Colors.text }]}>View Stats</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.quickActionItem, { backgroundColor: Colors.card }]}
+            onPress={() => router.push('/history')}
+          >
+            <View style={[styles.quickActionIcon, { backgroundColor: Colors.secondary }]}>
+              <Award size={20} color="#FFFFFF" />
+            </View>
+            <Text style={[styles.quickActionText, { color: Colors.text }]}>History</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      {/* Premium Features */}
+      {(currentTier === 'premium' || currentTier === 'premium_plus' || currentTier === 'family') && (
+        <View style={styles.premiumFeaturesContainer}>
+          <Text style={[styles.sectionTitle, { color: Colors.text }]}>Premium Features</Text>
+          
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.premiumFeaturesList}
+          >
+            {hasRecipeSuggestionsFeature && (
+              <TouchableOpacity 
+                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
+                onPress={() => router.push('/recipes')}
+              >
+                <BookOpen size={24} color={Colors.primary} />
+                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
+                  Recipes
+                </Text>
+                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
+                  Browse healthy recipes
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            {hasMealPlanningFeature && (
+              <TouchableOpacity 
+                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
+                onPress={() => router.push('/meal-plans')}
+              >
+                <Calendar size={24} color={Colors.primary} />
+                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
+                  Meal Plans
+                </Text>
+                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
+                  Plan your weekly meals
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            {hasAiCoachFeature && (
+              <TouchableOpacity 
+                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
+                onPress={() => router.push('/ai-coach')}
+              >
+                <Cpu size={24} color={Colors.primary} />
+                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
+                  AI Coach
+                </Text>
+                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
+                  Get personalized advice
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            {hasBarcodeFeature && (
+              <TouchableOpacity 
+                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
+                onPress={() => router.push('/barcode-scanner')}
+              >
+                <Maximize size={24} color={Colors.primary} />
+                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
+                  Barcode Scanner
+                </Text>
+                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
+                  Scan product barcodes
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            {hasCustomFoodsFeature && (
+              <TouchableOpacity 
+                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
+                onPress={() => router.push('/custom-foods')}
+              >
+                <Database size={24} color={Colors.primary} />
+                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
+                  Custom Foods
+                </Text>
+                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
+                  Create your own foods
+                </Text>
+              </TouchableOpacity>
+            )}
+          </ScrollView>
+        </View>
+      )}
+      
+      {/* Recent Meals */}
+      <View style={styles.recentMealsContainer}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: Colors.text }]}>Today's Meals</Text>
-          <Text style={[styles.dateText, { color: Colors.subtext }]}>{formatDate(new Date())}</Text>
+          <TouchableOpacity>
+            <Text style={[styles.viewAllText, { color: Colors.primary }]}>View All</Text>
+          </TouchableOpacity>
         </View>
         
-        {todayMeals.length === 0 ? (
-          <EmptyState 
-            message="No meals logged today. Start by scanning a meal or adding one manually."
-            icon={<Camera size={40} color={Colors.mediumGray} />}
+        <View style={styles.mealsList}>
+          <TouchableOpacity style={[styles.mealCard, { backgroundColor: Colors.card }]}>
+            <View style={[styles.mealTypeTag, { backgroundColor: Colors.mealTypes.breakfast }]}>
+              <Text style={styles.mealTypeText}>Breakfast</Text>
+            </View>
+            <View style={styles.mealContent}>
+              <Text style={[styles.mealName, { color: Colors.text }]}>Oatmeal with Berries</Text>
+              <Text style={[styles.mealTime, { color: Colors.subtext }]}>8:30 AM</Text>
+              <Text style={[styles.mealCalories, { color: Colors.primary }]}>320 calories</Text>
+            </View>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={[styles.mealCard, { backgroundColor: Colors.card }]}>
+            <View style={[styles.mealTypeTag, { backgroundColor: Colors.mealTypes.lunch }]}>
+              <Text style={styles.mealTypeText}>Lunch</Text>
+            </View>
+            <View style={styles.mealContent}>
+              <Text style={[styles.mealName, { color: Colors.text }]}>Chicken Salad</Text>
+              <Text style={[styles.mealTime, { color: Colors.subtext }]}>12:45 PM</Text>
+              <Text style={[styles.mealCalories, { color: Colors.primary }]}>450 calories</Text>
+            </View>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.addMealCard, { borderColor: Colors.border }]}
+            onPress={() => router.push('/scan-tab')}
+          >
+            <Plus size={24} color={Colors.primary} />
+            <Text style={[styles.addMealText, { color: Colors.primary }]}>Add Meal</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      {/* Nutrition Tips */}
+      <View style={styles.tipsContainer}>
+        <Text style={[styles.sectionTitle, { color: Colors.text }]}>Nutrition Tips</Text>
+        
+        <TouchableOpacity style={[styles.tipCard, { backgroundColor: Colors.card }]}>
+          <Image 
+            source={{ uri: 'https://images.unsplash.com/photo-1490818387583-1baba5e638af' }}
+            style={styles.tipImage}
           />
-        ) : (
-          todayMeals.map(meal => (
-            <MealCard
-              key={meal.id}
-              id={meal.id || ''}
-              food={meal.food}
-              calories={meal.calories}
-              date={meal.date}
-              method={meal.method}
-              mealType={meal.mealType}
-              notes={meal.notes}
-              onDelete={loadData}
-            />
-          ))
-        )}
+          <View style={styles.tipContent}>
+            <Text style={[styles.tipTitle, { color: Colors.text }]}>
+              Hydration Matters
+            </Text>
+            <Text style={[styles.tipDescription, { color: Colors.subtext }]}>
+              Drinking enough water is essential for metabolism and overall health.
+            </Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -163,69 +259,183 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  contentContainer: {
-    paddingBottom: 24,
-  },
   header: {
-    padding: 16,
-    paddingTop: 24,
-  },
-  greeting: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-  },
-  statsContainer: {
-    marginVertical: 8,
-  },
-  actionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    marginVertical: 16,
-  },
-  actionButton: {
-    flex: 1,
     alignItems: 'center',
+    padding: 16,
+  },
+  greeting: {
+    fontSize: 16,
+  },
+  userName: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  quickActionsContainer: {
+    padding: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 16,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  quickActionItem: {
+    width: '31%',
     borderRadius: 12,
     padding: 16,
-    marginHorizontal: 8,
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,
   },
-  actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  quickActionIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
   },
-  actionText: {
+  quickActionText: {
     fontSize: 14,
     fontWeight: '500',
   },
-  mealsSection: {
-    marginTop: 16,
+  premiumFeaturesContainer: {
+    padding: 16,
+  },
+  premiumFeaturesList: {
+    paddingRight: 16,
+  },
+  premiumFeatureItem: {
+    width: 150,
+    borderRadius: 12,
+    padding: 16,
+    marginRight: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  premiumFeatureTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 4,
+  },
+  premiumFeatureDescription: {
+    fontSize: 14,
+  },
+  recentMealsContainer: {
+    padding: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  mealsList: {
     marginBottom: 8,
   },
-  sectionTitle: {
+  mealCard: {
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+    overflow: 'hidden',
+  },
+  mealTypeTag: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  mealTypeText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  mealContent: {
+    padding: 12,
+  },
+  mealName: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  mealTime: {
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  mealCalories: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  addMealCard: {
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addMealText: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginTop: 8,
+  },
+  tipsContainer: {
+    padding: 16,
+    paddingBottom: 24,
+  },
+  tipCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  tipImage: {
+    width: '100%',
+    height: 150,
+  },
+  tipContent: {
+    padding: 16,
+  },
+  tipTitle: {
     fontSize: 18,
     fontWeight: '600',
+    marginBottom: 8,
   },
-  dateText: {
+  tipDescription: {
     fontSize: 14,
+    lineHeight: 20,
   },
 });

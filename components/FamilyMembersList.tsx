@@ -5,74 +5,92 @@ import {
   StyleSheet, 
   TouchableOpacity, 
   TextInput,
-  Alert,
-  FlatList
+  Alert
 } from 'react-native';
-import { Users, UserPlus, X, Mail, Check } from 'lucide-react-native';
+import { 
+  User, 
+  UserPlus, 
+  Mail, 
+  X, 
+  CheckCircle, 
+  Clock
+} from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useSubscriptionStore } from '@/store/subscriptionStore';
+import { FamilyMember } from '@/types';
 
-interface FamilyMembersListProps {
-  onUpdate?: (members: string[]) => void;
-}
+// Mock family members
+const mockFamilyMembers: FamilyMember[] = [
+  {
+    id: '1',
+    email: 'you@example.com',
+    name: 'You (Owner)',
+    status: 'active',
+    joinedDate: new Date().toISOString()
+  },
+  {
+    id: '2',
+    email: 'partner@example.com',
+    name: 'Partner',
+    status: 'active',
+    joinedDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: '3',
+    email: 'child@example.com',
+    status: 'pending'
+  }
+];
 
-const FamilyMembersList = ({ onUpdate }: FamilyMembersListProps) => {
+const FamilyMembersList = () => {
   const Colors = useThemeColors();
-  const { subscription, setSubscription } = useSubscriptionStore();
-  
-  const [members, setMembers] = useState<string[]>(
-    subscription?.familyMembers || ['you@example.com']
-  );
-  const [newMember, setNewMember] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>(mockFamilyMembers);
+  const [showAddMember, setShowAddMember] = useState(false);
+  const [newMemberEmail, setNewMemberEmail] = useState('');
   
   const handleAddMember = () => {
-    if (!newMember.trim()) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+    if (!newMemberEmail.trim() || !newMemberEmail.includes('@')) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address');
       return;
     }
     
-    if (!newMember.includes('@') || !newMember.includes('.')) {
-      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+    // Check if email already exists
+    if (familyMembers.some(member => member.email === newMemberEmail.trim())) {
+      Alert.alert('Duplicate Email', 'This email is already in your family plan');
       return;
     }
     
-    if (members.includes(newMember.trim())) {
-      Alert.alert('Duplicate Email', 'This email is already in your family plan.');
+    // Check if maximum members reached (5 including owner)
+    if (familyMembers.length >= 5) {
+      Alert.alert('Maximum Members', 'Your family plan can have a maximum of 5 members');
       return;
     }
     
-    if (members.length >= 5) {
-      Alert.alert('Maximum Reached', 'You can only add up to 5 family members.');
-      return;
-    }
+    const newMember: FamilyMember = {
+      id: Date.now().toString(),
+      email: newMemberEmail.trim(),
+      status: 'pending'
+    };
     
-    const updatedMembers = [...members, newMember.trim()];
-    setMembers(updatedMembers);
-    setNewMember('');
-    setIsAdding(false);
+    setFamilyMembers([...familyMembers, newMember]);
+    setNewMemberEmail('');
+    setShowAddMember(false);
     
-    if (subscription && subscription.tier === 'family') {
-      setSubscription({
-        ...subscription,
-        familyMembers: updatedMembers
-      });
-    }
-    
-    if (onUpdate) {
-      onUpdate(updatedMembers);
-    }
+    Alert.alert(
+      'Invitation Sent',
+      `An invitation has been sent to ${newMemberEmail.trim()}`
+    );
   };
   
-  const handleRemoveMember = (email: string) => {
-    if (email === 'you@example.com') {
-      Alert.alert('Cannot Remove', 'You cannot remove yourself from the family plan.');
+  const handleRemoveMember = (id: string) => {
+    // Don't allow removing the owner (first member)
+    if (id === '1') {
+      Alert.alert('Cannot Remove', 'You cannot remove yourself as the plan owner');
       return;
     }
     
     Alert.alert(
       'Remove Member',
-      `Are you sure you want to remove ${email} from your family plan?`,
+      'Are you sure you want to remove this member from your family plan?',
       [
         {
           text: 'Cancel',
@@ -82,105 +100,130 @@ const FamilyMembersList = ({ onUpdate }: FamilyMembersListProps) => {
           text: 'Remove',
           style: 'destructive',
           onPress: () => {
-            const updatedMembers = members.filter(m => m !== email);
-            setMembers(updatedMembers);
-            
-            if (subscription && subscription.tier === 'family') {
-              setSubscription({
-                ...subscription,
-                familyMembers: updatedMembers
-              });
-            }
-            
-            if (onUpdate) {
-              onUpdate(updatedMembers);
-            }
+            setFamilyMembers(familyMembers.filter(member => member.id !== id));
           }
         }
       ]
     );
   };
   
+  const renderStatusIcon = (status: string) => {
+    switch (status) {
+      case 'active':
+        return <CheckCircle size={16} color={Colors.success} />;
+      case 'pending':
+        return <Clock size={16} color={Colors.warning} />;
+      default:
+        return null;
+    }
+  };
+  
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Users size={20} color={Colors.secondary} />
         <Text style={[styles.title, { color: Colors.text }]}>Family Members</Text>
+        <TouchableOpacity 
+          style={[styles.addButton, { backgroundColor: Colors.secondary }]}
+          onPress={() => setShowAddMember(true)}
+        >
+          <UserPlus size={16} color="#FFFFFF" />
+          <Text style={styles.addButtonText}>Add</Text>
+        </TouchableOpacity>
       </View>
       
-      <FlatList
-        data={members}
-        keyExtractor={(item) => item}
-        renderItem={({ item }) => (
-          <View style={[styles.memberItem, { backgroundColor: Colors.card }]}>
-            <View style={styles.memberInfo}>
-              <Mail size={16} color={Colors.secondary} />
-              <Text style={[styles.memberEmail, { color: Colors.text }]}>{item}</Text>
-              {item === 'you@example.com' && (
-                <View style={[styles.ownerBadge, { backgroundColor: Colors.secondary }]}>
-                  <Text style={styles.ownerBadgeText}>YOU</Text>
-                </View>
-              )}
-            </View>
-            <TouchableOpacity 
-              style={styles.removeButton}
-              onPress={() => handleRemoveMember(item)}
-            >
-              <X size={16} color={item === 'you@example.com' ? Colors.mediumGray : Colors.error} />
+      {showAddMember && (
+        <View style={[styles.addMemberContainer, { backgroundColor: Colors.background }]}>
+          <View style={styles.addMemberHeader}>
+            <Text style={[styles.addMemberTitle, { color: Colors.text }]}>
+              Add Family Member
+            </Text>
+            <TouchableOpacity onPress={() => setShowAddMember(false)}>
+              <X size={20} color={Colors.text} />
             </TouchableOpacity>
           </View>
-        )}
-        ListFooterComponent={
-          isAdding ? (
-            <View style={[styles.addMemberContainer, { backgroundColor: Colors.card }]}>
+          
+          <View style={styles.addMemberForm}>
+            <View style={styles.inputContainer}>
+              <Mail size={20} color={Colors.subtext} />
               <TextInput
-                style={[styles.addMemberInput, { color: Colors.text }]}
+                style={[styles.input, { color: Colors.text }]}
                 placeholder="Enter email address"
                 placeholderTextColor={Colors.subtext}
-                value={newMember}
-                onChangeText={setNewMember}
-                autoCapitalize="none"
+                value={newMemberEmail}
+                onChangeText={setNewMemberEmail}
                 keyboardType="email-address"
-                autoFocus
+                autoCapitalize="none"
               />
-              <View style={styles.addMemberActions}>
-                <TouchableOpacity 
-                  style={[styles.actionButton, { borderColor: Colors.border }]}
-                  onPress={() => setIsAdding(false)}
-                >
-                  <Text style={[styles.actionButtonText, { color: Colors.text }]}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity 
+            </View>
+            
+            <TouchableOpacity 
+              style={[styles.inviteButton, { backgroundColor: Colors.secondary }]}
+              onPress={handleAddMember}
+            >
+              <Text style={styles.inviteButtonText}>Send Invitation</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+      
+      <View style={styles.membersList}>
+        {familyMembers.map((member) => (
+          <View 
+            key={member.id} 
+            style={[
+              styles.memberItem, 
+              { backgroundColor: Colors.background }
+            ]}
+          >
+            <View style={[styles.memberAvatar, { backgroundColor: Colors.secondary }]}>
+              <User size={20} color="#FFFFFF" />
+            </View>
+            
+            <View style={styles.memberInfo}>
+              <Text style={[styles.memberName, { color: Colors.text }]}>
+                {member.name || member.email}
+              </Text>
+              <View style={styles.memberStatus}>
+                {renderStatusIcon(member.status)}
+                <Text 
                   style={[
-                    styles.actionButton, 
-                    { backgroundColor: Colors.secondary }
+                    styles.memberStatusText, 
+                    { 
+                      color: member.status === 'active' 
+                        ? Colors.success 
+                        : Colors.warning 
+                    }
                   ]}
-                  onPress={handleAddMember}
                 >
-                  <Check size={16} color="#FFFFFF" />
-                  <Text style={styles.addButtonText}>Add</Text>
-                </TouchableOpacity>
+                  {member.status === 'active' ? 'Active' : 'Invitation Sent'}
+                </Text>
               </View>
             </View>
-          ) : (
-            members.length < 5 && (
-              <TouchableOpacity 
-                style={[styles.addButton, { borderColor: Colors.secondary }]}
-                onPress={() => setIsAdding(true)}
-              >
-                <UserPlus size={16} color={Colors.secondary} />
-                <Text style={[styles.addButtonText, { color: Colors.secondary }]}>
-                  Add Family Member
-                </Text>
-              </TouchableOpacity>
-            )
-          )
-        }
-        style={styles.membersList}
-      />
+            
+            <TouchableOpacity 
+              style={styles.removeButton}
+              onPress={() => handleRemoveMember(member.id)}
+            >
+              <X size={20} color={Colors.error} />
+            </TouchableOpacity>
+          </View>
+        ))}
+        
+        {familyMembers.length < 5 && !showAddMember && (
+          <TouchableOpacity 
+            style={[styles.addMemberButton, { borderColor: Colors.border }]}
+            onPress={() => setShowAddMember(true)}
+          >
+            <UserPlus size={20} color={Colors.secondary} />
+            <Text style={[styles.addMemberButtonText, { color: Colors.secondary }]}>
+              Add Family Member
+            </Text>
+          </TouchableOpacity>
+        )}
+      </View>
       
-      <Text style={[styles.infoText, { color: Colors.subtext }]}>
-        You can add up to 5 family members to your plan. Each member will receive an invitation email.
+      <Text style={[styles.remainingText, { color: Colors.subtext }]}>
+        {5 - familyMembers.length} {5 - familyMembers.length === 1 ? 'spot' : 'spots'} remaining
       </Text>
     </View>
   );
@@ -188,17 +231,29 @@ const FamilyMembersList = ({ onUpdate }: FamilyMembersListProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 16,
+    width: '100%',
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
-    marginLeft: 8,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    marginLeft: 4,
+    fontWeight: '500',
   },
   membersList: {
     marginBottom: 12,
@@ -206,80 +261,96 @@ const styles = StyleSheet.create({
   memberItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderRadius: 8,
     marginBottom: 8,
   },
-  memberInfo: {
-    flexDirection: 'row',
+  memberAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
+  },
+  memberInfo: {
     flex: 1,
   },
-  memberEmail: {
-    marginLeft: 8,
+  memberName: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  memberStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  memberStatusText: {
     fontSize: 14,
-  },
-  ownerBadge: {
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-    marginLeft: 8,
-  },
-  ownerBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: 'bold',
+    marginLeft: 4,
   },
   removeButton: {
-    padding: 4,
+    padding: 8,
   },
-  addButton: {
+  addMemberButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 12,
+    paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,
     borderStyle: 'dashed',
   },
-  addButtonText: {
-    marginLeft: 8,
+  addMemberButtonText: {
+    fontSize: 16,
     fontWeight: '500',
-    color: '#FFFFFF',
+    marginLeft: 8,
+  },
+  remainingText: {
+    fontSize: 14,
+    textAlign: 'center',
   },
   addMemberContainer: {
-    borderRadius: 8,
-    padding: 12,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  addMemberHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  addMemberTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  addMemberForm: {
     marginBottom: 8,
   },
-  addMemberInput: {
-    fontSize: 14,
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0, 0, 0, 0.1)',
-    marginBottom: 12,
-  },
-  addMemberActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-  },
-  actionButton: {
+  inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: '#DDDDDD',
+    marginBottom: 16,
+    paddingBottom: 8,
+  },
+  input: {
+    flex: 1,
     marginLeft: 8,
-    borderWidth: 1,
+    fontSize: 16,
   },
-  actionButtonText: {
-    fontSize: 14,
+  inviteButton: {
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
   },
-  infoText: {
-    fontSize: 12,
-    lineHeight: 16,
-    marginTop: 4,
+  inviteButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '500',
   },
 });
 
