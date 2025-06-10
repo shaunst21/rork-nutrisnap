@@ -54,10 +54,10 @@ const darkColors = {
 
 export function useThemeColors() {
   const colorScheme = useColorScheme();
-  const { theme } = useThemeStore();
+  const { theme, isSystemTheme } = useThemeStore();
   
   // Determine which theme to use
-  const selectedTheme = theme === 'system' 
+  const selectedTheme = isSystemTheme
     ? colorScheme || 'light' 
     : theme;
   
