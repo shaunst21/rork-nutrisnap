@@ -5,15 +5,12 @@ import {
   History, 
   Camera, 
   BarChart2, 
-  Settings,
-  Crown
+  Settings
 } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useSubscriptionStore } from '@/store/subscriptionStore';
 
 export default function TabLayout() {
   const Colors = useThemeColors();
-  const { hasFeature } = useSubscriptionStore();
   
   return (
     <Tabs
@@ -56,13 +53,6 @@ export default function TabLayout() {
         options={{
           title: 'Stats',
           tabBarIcon: ({ color }) => <BarChart2 size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="premium"
-        options={{
-          title: 'Premium',
-          tabBarIcon: ({ color }) => <Crown size={24} color={color} />,
         }}
       />
       <Tabs.Screen
