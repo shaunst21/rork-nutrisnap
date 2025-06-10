@@ -1,18 +1,14 @@
 import { create } from 'zustand';
-import { 
-  getCaloriesForDate, 
-  getCaloriesForWeek, 
-  getCaloriesForMonth,
-  getCaloriesPerDayForWeek,
-  getMostCommonFoods,
-  getCaloriesByMealType,
-  getAverageDailyCalories
-} from '@/utils/calorieHelpers';
-import { getStreakData } from '@/firebase';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { Stats } from '@/types';
 
-interface StatsState extends Stats {
-  weeklyCalorieData: Array<{day: string, calories: number}>;
+interface StatsState {
+  todayCalories: number;
+  weekCalories: number;
+  monthCalories: number;
+  averageDailyCalories: number;
+  weeklyCalorieData: number[];
   mealTypeCalories: {
     breakfast: number;
     lunch: number;
@@ -20,71 +16,89 @@ interface StatsState extends Stats {
     snack: number;
     other: number;
   };
+  macros: {
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  commonFoods: {
+    food: string;
+    count: number;
+  }[];
+  currentStreak: number;
+  longestStreak: number;
   isLoading: boolean;
   error: string | null;
-  fetchStats: () => Promise<void>;
+  
+  // Actions
+  fetchStats: () => void;
+  updateStats: (stats: Partial<Stats>) => void;
+  resetStats: () => void;
 }
 
-export const useStatsStore = create<StatsState>((set) => ({
-  todayCalories: 0,
-  weekCalories: 0,
-  monthCalories: 0,
-  averageDailyCalories: 0,
-  commonFoods: [],
-  currentStreak: 0,
-  longestStreak: 0,
-  weeklyCalorieData: [],
+// Mock data for demonstration
+const DEFAULT_STATS: Stats = {
+  todayCalories: 1250,
+  weekCalories: 8750,
+  monthCalories: 35000,
+  averageDailyCalories: 1750,
+  weeklyCalorieData: [1800, 1650, 1900, 1250, 2100, 1800, 1500],
   mealTypeCalories: {
-    breakfast: 0,
-    lunch: 0,
-    dinner: 0,
-    snack: 0,
+    breakfast: 350,
+    lunch: 450,
+    dinner: 380,
+    snack: 70,
     other: 0
   },
-  isLoading: false,
-  error: null,
-  
-  fetchStats: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const today = new Date().toISOString();
+  macros: {
+    protein: 75,
+    carbs: 180,
+    fat: 45
+  },
+  commonFoods: [
+    { food: 'Chicken Salad', count: 8 },
+    { food: 'Oatmeal', count: 6 },
+    { food: 'Greek Yogurt', count: 5 },
+    { food: 'Banana', count: 4 }
+  ],
+  currentStreak: 5,
+  longestStreak: 14
+};
+
+export const useStatsStore = create<StatsState>()(
+  persist(
+    (set) => ({
+      ...DEFAULT_STATS,
+      isLoading: false,
+      error: null,
       
-      // Fetch all stats in parallel
-      const [
-        todayCalories,
-        weekCalories,
-        monthCalories,
-        weeklyCalorieData,
-        mealTypeCalories,
-        averageDailyCalories,
-        commonFoods,
-        streakData
-      ] = await Promise.all([
-        getCaloriesForDate(today),
-        getCaloriesForWeek(),
-        getCaloriesForMonth(),
-        getCaloriesPerDayForWeek(),
-        getCaloriesByMealType(),
-        getAverageDailyCalories(),
-        getMostCommonFoods(5),
-        getStreakData()
-      ]);
+      fetchStats: () => {
+        set({ isLoading: true });
+        
+        // In a real app, this would be an API call
+        // For demo purposes, we'll just set some mock data after a delay
+        setTimeout(() => {
+          set({
+            ...DEFAULT_STATS,
+            isLoading: false
+          });
+        }, 500);
+      },
       
-      set({
-        todayCalories,
-        weekCalories,
-        monthCalories,
-        weeklyCalorieData,
-        mealTypeCalories,
-        averageDailyCalories,
-        commonFoods,
-        currentStreak: streakData?.currentStreak || 0,
-        longestStreak: streakData?.longestStreak || 0,
-        isLoading: false
-      });
-    } catch (error) {
-      console.error('Error fetching stats:', error);
-      set({ error: 'Failed to fetch stats', isLoading: false });
+      updateStats: (newStats) => {
+        set(state => ({
+          ...state,
+          ...newStats
+        }));
+      },
+      
+      resetStats: () => {
+        set(DEFAULT_STATS);
+      }
+    }),
+    {
+      name: 'stats-storage',
+      storage: createJSONStorage(() => AsyncStorage),
     }
-  }
-}));
+  )
+);

@@ -47,12 +47,13 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const Colors = useThemeColors();
+  const { theme } = useThemeStore();
   
   return (
     <ThemeProvider>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <StatusBar style={Colors === Colors.dark ? "light" : "dark"} />
+          <StatusBar style={theme === 'dark' ? "light" : "dark"} />
           <Stack
             screenOptions={{
               headerStyle: {
@@ -81,6 +82,27 @@ function RootLayoutNav() {
               options={{ 
                 title: "Add Food",
                 presentation: "modal",
+                headerTitleAlign: "center",
+              }} 
+            />
+            <Stack.Screen 
+              name="export-data" 
+              options={{ 
+                title: "Export Data",
+                headerTitleAlign: "center",
+              }} 
+            />
+            <Stack.Screen 
+              name="custom-foods" 
+              options={{ 
+                title: "Custom Foods",
+                headerTitleAlign: "center",
+              }} 
+            />
+            <Stack.Screen 
+              name="search" 
+              options={{ 
+                title: "Search Foods",
                 headerTitleAlign: "center",
               }} 
             />

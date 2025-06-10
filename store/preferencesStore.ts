@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Preferences } from '@/types';
+import { UserPreferences } from '@/types';
 
 interface PreferencesState {
-  preferences: Preferences;
+  preferences: UserPreferences;
   isLoading: boolean;
   error: string | null;
-  updatePreferences: (preferences: Partial<Preferences>) => void;
+  updatePreferences: (preferences: Partial<UserPreferences>) => void;
 }
 
-const DEFAULT_PREFERENCES: Preferences = {
+const DEFAULT_PREFERENCES: UserPreferences = {
   dailyCalorieGoal: 2000,
   weeklyCalorieGoal: 14000,
   theme: 'light',

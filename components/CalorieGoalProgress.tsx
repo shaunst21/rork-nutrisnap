@@ -9,7 +9,10 @@ interface CalorieGoalProgressProps {
 
 const CalorieGoalProgress = ({ current = 0, goal = 2000 }: CalorieGoalProgressProps) => {
   const Colors = useThemeColors();
-  const percentage = Math.min(Math.round((current / goal) * 100), 100);
+  
+  // Ensure we don't divide by zero
+  const safeGoal = goal > 0 ? goal : 1;
+  const percentage = Math.min(Math.round((current / safeGoal) * 100), 100);
   const isOverGoal = current > goal;
   
   // Determine color based on percentage
