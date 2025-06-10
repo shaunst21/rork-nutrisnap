@@ -73,3 +73,9 @@ export interface PromoCode {
   expiryDate: string;
   isUsed: boolean;
 }
+
+export interface StreakData {
+  currentStreak: number;
+  longestStreak: number;
+  lastLogDate: string | null;
+}

@@ -13,30 +13,7 @@ import {
 } from '@/utils/calorieHelpers';
 import { getDaysOfWeek } from '@/utils/dateHelpers';
 
-interface StatsState {
-  todayCalories: number;
-  weekCalories: number;
-  monthCalories: number;
-  averageDailyCalories: number;
-  weeklyCalorieData: Array<{day: string; calories: number}>;
-  mealTypeCalories: {
-    breakfast: number;
-    lunch: number;
-    dinner: number;
-    snack: number;
-    other: number;
-  };
-  macros: {
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
-  commonFoods: {
-    food: string;
-    count: number;
-  }[];
-  currentStreak: number;
-  longestStreak: number;
+interface StatsState extends Stats {
   isLoading: boolean;
   error: string | null;
   

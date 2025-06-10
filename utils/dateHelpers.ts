@@ -1,30 +1,70 @@
-// Format date to display in a user-friendly way
-export const formatDate = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  
-  if (isSameDay(dateObj, today)) {
-    return 'Today';
-  } else if (isSameDay(dateObj, yesterday)) {
-    return 'Yesterday';
-  } else {
-    return dateObj.toLocaleDateString(undefined, {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-    });
-  }
+// Get start of day
+export const startOfDay = (date: Date): Date => {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  return start;
 };
 
-// Format time to display in a user-friendly way
-export const formatTime = (date: Date | string): string => {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleTimeString(undefined, {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+// Get end of day
+export const endOfDay = (date: Date): Date => {
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+  return end;
+};
+
+// Get start of week (Sunday)
+export const startOfWeek = (date: Date): Date => {
+  const start = new Date(date);
+  const day = start.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  start.setDate(start.getDate() - day);
+  start.setHours(0, 0, 0, 0);
+  return start;
+};
+
+// Get end of week (Saturday)
+export const endOfWeek = (date: Date): Date => {
+  const end = new Date(date);
+  const day = end.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  end.setDate(end.getDate() + (6 - day));
+  end.setHours(23, 59, 59, 999);
+  return end;
+};
+
+// Get start of month
+export const startOfMonth = (date: Date): Date => {
+  const start = new Date(date);
+  start.setDate(1);
+  start.setHours(0, 0, 0, 0);
+  return start;
+};
+
+// Get end of month
+export const endOfMonth = (date: Date): Date => {
+  const end = new Date(date);
+  end.setMonth(end.getMonth() + 1);
+  end.setDate(0);
+  end.setHours(23, 59, 59, 999);
+  return end;
+};
+
+// Format date as YYYY-MM-DD
+export const formatDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Format time as HH:MM
+export const formatTime = (date: Date): string => {
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
+
+// Get days of week (Sunday to Saturday)
+export const getDaysOfWeek = (): string[] => {
+  return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 };
 
 // Check if two dates are the same day
@@ -36,79 +76,35 @@ export const isSameDay = (date1: Date, date2: Date): boolean => {
   );
 };
 
-// Get the start of the day
-export const startOfDay = (date: Date): Date => {
-  const result = new Date(date);
-  result.setHours(0, 0, 0, 0);
-  return result;
-};
-
-// Get the end of the day
-export const endOfDay = (date: Date): Date => {
-  const result = new Date(date);
-  result.setHours(23, 59, 59, 999);
-  return result;
-};
-
-// Get the start of the week (Sunday)
-export const startOfWeek = (date: Date): Date => {
-  const result = new Date(date);
-  const day = result.getDay();
-  result.setDate(result.getDate() - day);
-  result.setHours(0, 0, 0, 0);
-  return result;
-};
-
-// Get the end of the week (Saturday)
-export const endOfWeek = (date: Date): Date => {
-  const result = new Date(date);
-  const day = result.getDay();
-  result.setDate(result.getDate() + (6 - day));
-  result.setHours(23, 59, 59, 999);
-  return result;
-};
-
-// Get the start of the month
-export const startOfMonth = (date: Date): Date => {
-  const result = new Date(date);
-  result.setDate(1);
-  result.setHours(0, 0, 0, 0);
-  return result;
-};
-
-// Get the end of the month
-export const endOfMonth = (date: Date): Date => {
-  const result = new Date(date);
-  result.setMonth(result.getMonth() + 1);
-  result.setDate(0);
-  result.setHours(23, 59, 59, 999);
-  return result;
-};
-
-// Get days of the week for the current week
-export const getDaysOfWeek = (): string[] => {
+// Get relative date string (Today, Yesterday, or formatted date)
+export const getRelativeDateString = (date: Date): string => {
   const today = new Date();
-  const startDay = startOfWeek(today);
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
   
-  const days = [];
-  for (let i = 0; i < 7; i++) {
-    const day = new Date(startDay);
-    day.setDate(day.getDate() + i);
-    days.push(day.toLocaleDateString(undefined, { weekday: 'short' }));
+  if (isSameDay(date, today)) {
+    return 'Today';
+  } else if (isSameDay(date, yesterday)) {
+    return 'Yesterday';
+  } else {
+    return date.toLocaleDateString(undefined, {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+    });
   }
-  
-  return days;
 };
 
 export default {
-  formatDate,
-  formatTime,
-  isSameDay,
   startOfDay,
   endOfDay,
   startOfWeek,
   endOfWeek,
   startOfMonth,
   endOfMonth,
-  getDaysOfWeek
+  formatDate,
+  formatTime,
+  getDaysOfWeek,
+  isSameDay,
+  getRelativeDateString
 };
