@@ -6,9 +6,7 @@ import {
   Camera, 
   BarChart2, 
   Settings,
-  Crown,
-  BookOpen,
-  Calendar
+  Crown
 } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSubscriptionStore } from '@/store/subscriptionStore';
@@ -16,9 +14,6 @@ import { useSubscriptionStore } from '@/store/subscriptionStore';
 export default function TabLayout() {
   const Colors = useThemeColors();
   const { hasFeature } = useSubscriptionStore();
-  
-  const hasRecipeSuggestionsFeature = hasFeature('recipe_suggestions');
-  const hasMealPlanningFeature = hasFeature('meal_planning');
   
   return (
     <Tabs
@@ -63,24 +58,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <BarChart2 size={24} color={color} />,
         }}
       />
-      {hasRecipeSuggestionsFeature && (
-        <Tabs.Screen
-          name="recipes"
-          options={{
-            title: 'Recipes',
-            tabBarIcon: ({ color }) => <BookOpen size={24} color={color} />,
-          }}
-        />
-      )}
-      {hasMealPlanningFeature && (
-        <Tabs.Screen
-          name="meal-plans"
-          options={{
-            title: 'Meal Plans',
-            tabBarIcon: ({ color }) => <Calendar size={24} color={color} />,
-          }}
-        />
-      )}
       <Tabs.Screen
         name="premium"
         options={{
