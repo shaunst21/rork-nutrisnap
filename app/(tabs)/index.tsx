@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { 
   View, 
   Text, 
@@ -12,11 +12,7 @@ import {
   Plus, 
   TrendingUp, 
   Award, 
-  Calendar, 
-  BookOpen,
-  Cpu,
-  Maximize,
-  Database
+  Calendar
 } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSubscriptionStore } from '@/store/subscriptionStore';
@@ -27,19 +23,12 @@ export default function HomeScreen() {
   const Colors = useThemeColors();
   const router = useRouter();
   const { 
-    hasFeature, 
     isTrialAvailable, 
     getSubscriptionTier 
   } = useSubscriptionStore();
   
   const currentTier = getSubscriptionTier();
   const canTrial = isTrialAvailable();
-  
-  const hasRecipeSuggestionsFeature = hasFeature('recipe_suggestions');
-  const hasMealPlanningFeature = hasFeature('meal_planning');
-  const hasAiCoachFeature = hasFeature('ai_coach');
-  const hasBarcodeFeature = hasFeature('barcode_scanning');
-  const hasCustomFoodsFeature = hasFeature('custom_foods');
   
   return (
     <ScrollView style={[styles.container, { backgroundColor: Colors.background }]}>
@@ -103,90 +92,24 @@ export default function HomeScreen() {
       </View>
       
       {/* Premium Features */}
-      {(currentTier === 'premium' || currentTier === 'premium_plus' || currentTier === 'family') && (
+      {currentTier === 'premium' && (
         <View style={styles.premiumFeaturesContainer}>
           <Text style={[styles.sectionTitle, { color: Colors.text }]}>Premium Features</Text>
           
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.premiumFeaturesList}
-          >
-            {hasRecipeSuggestionsFeature && (
-              <TouchableOpacity 
-                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
-                onPress={() => router.push('/recipes')}
-              >
-                <BookOpen size={24} color={Colors.primary} />
-                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
-                  Recipes
-                </Text>
-                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
-                  Browse healthy recipes
-                </Text>
-              </TouchableOpacity>
-            )}
-            
-            {hasMealPlanningFeature && (
-              <TouchableOpacity 
-                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
-                onPress={() => router.push('/meal-plans')}
-              >
-                <Calendar size={24} color={Colors.primary} />
-                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
-                  Meal Plans
-                </Text>
-                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
-                  Plan your weekly meals
-                </Text>
-              </TouchableOpacity>
-            )}
-            
-            {hasAiCoachFeature && (
-              <TouchableOpacity 
-                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
-                onPress={() => router.push('/ai-coach')}
-              >
-                <Cpu size={24} color={Colors.primary} />
-                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
-                  AI Coach
-                </Text>
-                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
-                  Get personalized advice
-                </Text>
-              </TouchableOpacity>
-            )}
-            
-            {hasBarcodeFeature && (
-              <TouchableOpacity 
-                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
-                onPress={() => router.push('/barcode-scanner')}
-              >
-                <Maximize size={24} color={Colors.primary} />
-                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
-                  Barcode Scanner
-                </Text>
-                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
-                  Scan product barcodes
-                </Text>
-              </TouchableOpacity>
-            )}
-            
-            {hasCustomFoodsFeature && (
-              <TouchableOpacity 
-                style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
-                onPress={() => router.push('/custom-foods')}
-              >
-                <Database size={24} color={Colors.primary} />
-                <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
-                  Custom Foods
-                </Text>
-                <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
-                  Create your own foods
-                </Text>
-              </TouchableOpacity>
-            )}
-          </ScrollView>
+          <View style={styles.premiumFeaturesList}>
+            <TouchableOpacity 
+              style={[styles.premiumFeatureItem, { backgroundColor: Colors.card }]}
+              onPress={() => router.push('/export-data')}
+            >
+              <TrendingUp size={24} color={Colors.primary} />
+              <Text style={[styles.premiumFeatureTitle, { color: Colors.text }]}>
+                Advanced Analytics
+              </Text>
+              <Text style={[styles.premiumFeatureDescription, { color: Colors.subtext }]}>
+                Get detailed insights
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
       
@@ -323,6 +246,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   premiumFeaturesList: {
+    flexDirection: 'row',
     paddingRight: 16,
   },
   premiumFeatureItem: {

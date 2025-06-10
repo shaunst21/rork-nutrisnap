@@ -33,78 +33,36 @@ const DEFAULT_FEATURES: SubscriptionFeature[] = [
     id: 'unlimited_meals',
     name: 'Unlimited Meal Tracking',
     description: 'Track as many meals as you want with no limits',
-    tiers: ['free', 'premium', 'premium_plus'],
+    tiers: ['free', 'premium'],
     icon: 'utensils'
   },
   {
     id: 'basic_stats',
     name: 'Basic Statistics',
     description: 'View basic calorie and macro statistics',
-    tiers: ['free', 'premium', 'premium_plus'],
+    tiers: ['free', 'premium'],
     icon: 'bar-chart-2'
   },
   {
     id: 'food_scanning',
     name: 'Food Scanning',
     description: 'Scan food with your camera to log meals',
-    tiers: ['free', 'premium', 'premium_plus'],
+    tiers: ['free', 'premium'],
     icon: 'camera'
   },
   {
     id: 'advanced_stats',
     name: 'Advanced Analytics',
     description: 'Get detailed insights and trends about your nutrition',
-    tiers: ['premium', 'premium_plus'],
+    tiers: ['premium'],
     icon: 'trending-up'
-  },
-  {
-    id: 'meal_planning',
-    name: 'Meal Planning',
-    description: 'Create and manage weekly meal plans',
-    tiers: ['premium', 'premium_plus'],
-    icon: 'calendar'
-  },
-  {
-    id: 'recipe_suggestions',
-    name: 'Recipe Suggestions',
-    description: 'Get personalized recipe suggestions based on your goals',
-    tiers: ['premium', 'premium_plus'],
-    icon: 'book-open'
   },
   {
     id: 'data_export',
     name: 'Data Export',
     description: 'Export your nutrition data in various formats',
-    tiers: ['premium', 'premium_plus'],
+    tiers: ['premium'],
     icon: 'download'
-  },
-  {
-    id: 'barcode_scanning',
-    name: 'Barcode Scanning',
-    description: 'Scan product barcodes for instant nutrition info',
-    tiers: ['premium_plus'],
-    icon: 'maximize'
-  },
-  {
-    id: 'custom_foods',
-    name: 'Custom Food Database',
-    description: 'Create and save your own custom foods',
-    tiers: ['premium_plus'],
-    icon: 'database'
-  },
-  {
-    id: 'ai_coach',
-    name: 'AI Nutrition Coach',
-    description: 'Get personalized nutrition advice from our AI coach',
-    tiers: ['premium_plus'],
-    icon: 'cpu'
-  },
-  {
-    id: 'priority_support',
-    name: 'Priority Support',
-    description: 'Get priority customer support',
-    tiers: ['premium_plus'],
-    icon: 'headphones'
   }
 ];
 

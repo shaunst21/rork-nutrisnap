@@ -1,4 +1,4 @@
-export type SubscriptionTier = 'free' | 'premium' | 'premium_plus' | 'family';
+export type SubscriptionTier = 'free' | 'premium';
 
 export interface Subscription {
   tier: SubscriptionTier;
@@ -7,7 +7,6 @@ export interface Subscription {
   autoRenew: boolean;
   status: 'active' | 'canceled' | 'expired';
   isTrial?: boolean;
-  familyMembers?: string[];
 }
 
 export interface SubscriptionFeature {
@@ -109,12 +108,4 @@ export interface ExportData {
     };
   };
   preferences: UserPreferences;
-}
-
-export interface FamilyMember {
-  id: string;
-  email: string;
-  name?: string;
-  status: 'active' | 'pending' | 'expired';
-  joinedDate?: string;
 }
