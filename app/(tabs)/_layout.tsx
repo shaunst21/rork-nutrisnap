@@ -1,26 +1,14 @@
-import React, { useEffect } from 'react';
 import { Tabs } from 'expo-router';
+import { useColorScheme } from 'react-native';
+import { Home, BarChart2, History, Camera, Settings, Crown } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { Home, History, Camera, Settings, BarChart } from 'lucide-react-native';
-import { useStatsStore } from '@/store/statsStore';
-import { useMealStore } from '@/store/mealStore';
-import { checkAndUpdateStreak } from '@/utils/streakHelpers';
+import { useThemeStore } from '@/store/themeStore';
 
 export default function TabLayout() {
+  const colorScheme = useColorScheme();
+  const { theme } = useThemeStore();
   const Colors = useThemeColors();
-  const fetchStats = useStatsStore(state => state.fetchStats);
-  const fetchMeals = useMealStore(state => state.fetchMeals);
-  
-  useEffect(() => {
-    // Check and update streak status
-    checkAndUpdateStreak();
-    
-    // Fetch meals and stats on app start
-    fetchMeals().then(() => {
-      fetchStats();
-    });
-  }, []);
-  
+
   return (
     <Tabs
       screenOptions={{
@@ -61,7 +49,14 @@ export default function TabLayout() {
         name="stats"
         options={{
           title: 'Stats',
-          tabBarIcon: ({ color }) => <BarChart size={24} color={color} />,
+          tabBarIcon: ({ color }) => <BarChart2 size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="premium"
+        options={{
+          title: 'Premium',
+          tabBarIcon: ({ color }) => <Crown size={24} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -69,6 +64,20 @@ export default function TabLayout() {
         options={{
           title: 'Settings',
           tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="recipes"
+        options={{
+          title: 'Recipes',
+          href: null, // Hide this tab from the tab bar
+        }}
+      />
+      <Tabs.Screen
+        name="meal-plans"
+        options={{
+          title: 'Meal Plans',
+          href: null, // Hide this tab from the tab bar
         }}
       />
     </Tabs>

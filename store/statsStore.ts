@@ -25,7 +25,7 @@ interface StatsState extends Stats {
   fetchStats: () => Promise<void>;
 }
 
-export const useStatsStore = create<StatsState>((set, get) => ({
+export const useStatsStore = create<StatsState>((set) => ({
   todayCalories: 0,
   weekCalories: 0,
   monthCalories: 0,
@@ -47,7 +47,7 @@ export const useStatsStore = create<StatsState>((set, get) => ({
   fetchStats: async () => {
     set({ isLoading: true, error: null });
     try {
-      const today = new Date();
+      const today = new Date().toISOString();
       
       // Fetch all stats in parallel
       const [
@@ -60,7 +60,7 @@ export const useStatsStore = create<StatsState>((set, get) => ({
         commonFoods,
         streakData
       ] = await Promise.all([
-        getCaloriesForDate(today.toISOString()),
+        getCaloriesForDate(today),
         getCaloriesForWeek(),
         getCaloriesForMonth(),
         getCaloriesPerDayForWeek(),
@@ -69,18 +69,6 @@ export const useStatsStore = create<StatsState>((set, get) => ({
         getMostCommonFoods(5),
         getStreakData()
       ]);
-      
-      // Log the results for debugging
-      console.log('Stats fetched:', {
-        todayCalories,
-        weekCalories,
-        monthCalories,
-        weeklyCalorieData,
-        mealTypeCalories,
-        averageDailyCalories,
-        commonFoods,
-        streakData
-      });
       
       set({
         todayCalories,
