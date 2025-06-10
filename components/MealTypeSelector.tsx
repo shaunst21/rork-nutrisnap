@@ -1,68 +1,163 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Coffee, Sun, Moon, Cookie } from 'lucide-react-native';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
+type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
+
 interface MealTypeSelectorProps {
-  selectedType: string;
-  onSelect: (type: string) => void;
+  selectedType: MealType;
+  onSelect: (type: MealType) => void;
 }
 
 const MealTypeSelector = ({ selectedType, onSelect }: MealTypeSelectorProps) => {
   const Colors = useThemeColors();
   
-  const mealTypes = [
-    { id: 'breakfast', label: 'Breakfast', color: Colors.mealTypes.breakfast },
-    { id: 'lunch', label: 'Lunch', color: Colors.mealTypes.lunch },
-    { id: 'dinner', label: 'Dinner', color: Colors.mealTypes.dinner },
-    { id: 'snack', label: 'Snack', color: Colors.mealTypes.snack },
-    { id: 'other', label: 'Other', color: Colors.mealTypes.other },
-  ];
-  
   return (
     <View style={styles.container}>
-      {mealTypes.map((type) => (
+      <Text style={[styles.label, { color: Colors.text }]}>Meal Type</Text>
+      
+      <View style={styles.optionsContainer}>
         <TouchableOpacity
-          key={type.id}
           style={[
-            styles.typeButton,
-            { 
-              backgroundColor: selectedType === type.id ? type.color : Colors.card,
-              borderColor: type.color,
-              borderWidth: 1,
-            },
+            styles.option,
+            { backgroundColor: Colors.card },
+            selectedType === 'breakfast' && [
+              styles.selectedOption,
+              { borderColor: Colors.mealTypes.breakfast }
+            ],
           ]}
-          onPress={() => onSelect(type.id)}
+          onPress={() => onSelect('breakfast')}
         >
-          <Text
+          <Coffee 
+            size={24} 
+            color={selectedType === 'breakfast' ? Colors.mealTypes.breakfast : Colors.subtext} 
+          />
+          <Text 
             style={[
-              styles.typeText,
-              { color: selectedType === type.id ? '#FFFFFF' : type.color },
+              styles.optionText,
+              { color: Colors.text },
+              selectedType === 'breakfast' && { color: Colors.mealTypes.breakfast }
             ]}
           >
-            {type.label}
+            Breakfast
           </Text>
         </TouchableOpacity>
-      ))}
+        
+        <TouchableOpacity
+          style={[
+            styles.option,
+            { backgroundColor: Colors.card },
+            selectedType === 'lunch' && [
+              styles.selectedOption,
+              { borderColor: Colors.mealTypes.lunch }
+            ],
+          ]}
+          onPress={() => onSelect('lunch')}
+        >
+          <Sun 
+            size={24} 
+            color={selectedType === 'lunch' ? Colors.mealTypes.lunch : Colors.subtext} 
+          />
+          <Text 
+            style={[
+              styles.optionText,
+              { color: Colors.text },
+              selectedType === 'lunch' && { color: Colors.mealTypes.lunch }
+            ]}
+          >
+            Lunch
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[
+            styles.option,
+            { backgroundColor: Colors.card },
+            selectedType === 'dinner' && [
+              styles.selectedOption,
+              { borderColor: Colors.mealTypes.dinner }
+            ],
+          ]}
+          onPress={() => onSelect('dinner')}
+        >
+          <Moon 
+            size={24} 
+            color={selectedType === 'dinner' ? Colors.mealTypes.dinner : Colors.subtext} 
+          />
+          <Text 
+            style={[
+              styles.optionText,
+              { color: Colors.text },
+              selectedType === 'dinner' && { color: Colors.mealTypes.dinner }
+            ]}
+          >
+            Dinner
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={[
+            styles.option,
+            { backgroundColor: Colors.card },
+            selectedType === 'snack' && [
+              styles.selectedOption,
+              { borderColor: Colors.mealTypes.snack }
+            ],
+          ]}
+          onPress={() => onSelect('snack')}
+        >
+          <Cookie 
+            size={24} 
+            color={selectedType === 'snack' ? Colors.mealTypes.snack : Colors.subtext} 
+          />
+          <Text 
+            style={[
+              styles.optionText,
+              { color: Colors.text },
+              selectedType === 'snack' && { color: Colors.mealTypes.snack }
+            ]}
+          >
+            Snack
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
     marginBottom: 16,
   },
-  typeButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    marginRight: 8,
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
     marginBottom: 8,
   },
-  typeText: {
+  optionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  option: {
+    width: '48%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'transparent',
+    marginBottom: 12,
+  },
+  selectedOption: {
+    borderWidth: 2,
+  },
+  optionText: {
     fontSize: 14,
     fontWeight: '500',
+    marginLeft: 8,
   },
 });
 
