@@ -11,7 +11,6 @@ import {
   Camera, 
   Utensils, 
   Search, 
-  Maximize,
   BarChart2
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
@@ -22,8 +21,6 @@ export default function ScanTabScreen() {
   const Colors = useThemeColors();
   const router = useRouter();
   const { hasFeature } = useSubscriptionStore();
-  
-  const hasBarcodeFeature = hasFeature('barcode_scanning');
   
   return (
     <ScrollView style={[styles.container, { backgroundColor: Colors.background }]}>
@@ -73,29 +70,6 @@ export default function ScanTabScreen() {
         
         <TouchableOpacity 
           style={[styles.optionCard, { backgroundColor: Colors.card }]}
-          onPress={() => router.push('/barcode-scanner')}
-        >
-          <View style={[
-            styles.optionIconContainer, 
-            { backgroundColor: hasBarcodeFeature ? Colors.info : Colors.mediumGray }
-          ]}>
-            <Maximize size={24} color="#FFFFFF" />
-          </View>
-          <Text style={[styles.optionTitle, { color: Colors.text }]}>Barcode Scanner</Text>
-          <Text style={[styles.optionDescription, { color: Colors.subtext }]}>
-            {hasBarcodeFeature 
-              ? 'Scan product barcodes for instant info' 
-              : 'Premium Plus feature'}
-          </Text>
-          {!hasBarcodeFeature && (
-            <View style={styles.premiumBadge}>
-              <Text style={styles.premiumBadgeText}>PREMIUM+</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.optionCard, { backgroundColor: Colors.card }]}
           onPress={() => router.push('/custom-foods')}
         >
           <View style={[
@@ -108,11 +82,11 @@ export default function ScanTabScreen() {
           <Text style={[styles.optionDescription, { color: Colors.subtext }]}>
             {hasFeature('custom_foods') 
               ? 'Create and manage your custom foods' 
-              : 'Premium Plus feature'}
+              : 'Premium feature'}
           </Text>
           {!hasFeature('custom_foods') && (
             <View style={styles.premiumBadge}>
-              <Text style={styles.premiumBadgeText}>PREMIUM+</Text>
+              <Text style={styles.premiumBadgeText}>PREMIUM</Text>
             </View>
           )}
         </TouchableOpacity>

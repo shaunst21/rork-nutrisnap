@@ -63,6 +63,13 @@ const DEFAULT_FEATURES: SubscriptionFeature[] = [
     description: 'Export your nutrition data in various formats',
     tiers: ['premium'],
     icon: 'download'
+  },
+  {
+    id: 'custom_foods',
+    name: 'Custom Foods',
+    description: 'Create and manage your custom foods',
+    tiers: ['premium'],
+    icon: 'edit'
   }
 ];
 
