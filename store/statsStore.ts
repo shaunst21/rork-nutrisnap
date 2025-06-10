@@ -153,8 +153,13 @@ export const useStatsStore = create<StatsState>()(
         if (meal.mealType) {
           set(state => {
             const updatedMealTypeCalories = { ...state.mealTypeCalories };
-            updatedMealTypeCalories[meal.mealType as keyof typeof updatedMealTypeCalories] += 
-              (meal.calories || 0);
+            const mealTypeKey = meal.mealType as keyof typeof updatedMealTypeCalories;
+            if (mealTypeKey in updatedMealTypeCalories) {
+              updatedMealTypeCalories[mealTypeKey] += (meal.calories || 0);
+            } else {
+              // If invalid meal type, add to "other"
+              updatedMealTypeCalories.other += (meal.calories || 0);
+            }
             return { mealTypeCalories: updatedMealTypeCalories };
           });
         } else {

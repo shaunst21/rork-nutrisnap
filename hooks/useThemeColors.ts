@@ -24,6 +24,11 @@ const lightColors = {
     dinner: '#2196F3',
     snack: '#9C27B0',
     other: '#607D8B'
+  },
+  macros: {
+    protein: '#4CAF50',
+    carbs: '#2196F3',
+    fat: '#FF9800'
   }
 };
 
@@ -49,6 +54,11 @@ const darkColors = {
     dinner: '#42A5F5',
     snack: '#BA68C8',
     other: '#78909C'
+  },
+  macros: {
+    protein: '#66BB6A',
+    carbs: '#42A5F5',
+    fat: '#FFA726'
   }
 };
 
@@ -61,5 +71,6 @@ export function useThemeColors() {
     ? colorScheme || 'light' 
     : theme;
   
+  // Fix: Use type-safe comparison
   return selectedTheme === 'dark' ? darkColors : lightColors;
 }

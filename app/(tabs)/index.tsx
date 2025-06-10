@@ -100,7 +100,7 @@ export default function HomeScreen() {
       />
       
       {/* Premium Banner (if not premium) */}
-      {currentTier === 'free' && (
+      {currentTier === "free" && (
         <SubscriptionBanner canTrial={canTrial} />
       )}
       
@@ -142,7 +142,7 @@ export default function HomeScreen() {
       </View>
       
       {/* Premium Features */}
-      {currentTier === 'premium' && (
+      {currentTier === "premium" && (
         <View style={styles.premiumFeaturesContainer}>
           <Text style={[styles.sectionTitle, { color: Colors.text }]}>Premium Features</Text>
           
@@ -181,7 +181,7 @@ export default function HomeScreen() {
               });
               
               const mealTypeColor = meal.mealType ? 
-                Colors.mealTypes[meal.mealType] : 
+                Colors.mealTypes[meal.mealType as keyof typeof Colors.mealTypes] : 
                 Colors.mealTypes.other;
               
               return (

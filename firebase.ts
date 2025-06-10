@@ -158,7 +158,7 @@ export const getMealsForDate = async (date: string): Promise<Meal[]> => {
 
 export const getStreakData = async (): Promise<StreakData> => {
   try {
-    const data = await AsyncStorage.getItem('streak_data');
+    const data = await AsyncStorage.getItem('streak-data');
     return data ? JSON.parse(data) : {
       currentStreak: 0,
       longestStreak: 0,
@@ -176,7 +176,7 @@ export const getStreakData = async (): Promise<StreakData> => {
 
 export const updateStreakData = async (streakData: StreakData): Promise<StreakData> => {
   try {
-    await AsyncStorage.setItem('streak_data', JSON.stringify(streakData));
+    await AsyncStorage.setItem('streak-data', JSON.stringify(streakData));
     return streakData;
   } catch (error) {
     console.error('Error updating streak data:', error);

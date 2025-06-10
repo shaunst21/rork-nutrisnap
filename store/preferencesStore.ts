@@ -5,32 +5,39 @@ import { UserPreferences } from '@/types';
 
 interface PreferencesState {
   preferences: UserPreferences;
-  isLoading: boolean;
-  error: string | null;
-  updatePreferences: (preferences: Partial<UserPreferences>) => void;
+  
+  // Actions
+  updatePreferences: (newPreferences: Partial<UserPreferences>) => void;
+  resetPreferences: () => void;
 }
 
-const DEFAULT_PREFERENCES: UserPreferences = {
+const defaultPreferences: UserPreferences = {
   dailyCalorieGoal: 2000,
-  weeklyCalorieGoal: 14000,
-  theme: 'light',
-  notifications: true
+  dailyProteinGoal: 150,
+  dailyCarbsGoal: 200,
+  dailyFatGoal: 65,
+  weightUnit: 'kg',
+  heightUnit: 'cm',
+  notificationsEnabled: true,
+  reminderTime: '19:00',
 };
 
 export const usePreferencesStore = create<PreferencesState>()(
   persist(
     (set) => ({
-      preferences: DEFAULT_PREFERENCES,
-      isLoading: false,
-      error: null,
+      preferences: defaultPreferences,
       
       updatePreferences: (newPreferences) => {
-        set(state => ({
+        set((state) => ({
           preferences: {
             ...state.preferences,
             ...newPreferences
           }
         }));
+      },
+      
+      resetPreferences: () => {
+        set({ preferences: defaultPreferences });
       }
     }),
     {
