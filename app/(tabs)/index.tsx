@@ -5,7 +5,8 @@ import {
   StyleSheet, 
   ScrollView, 
   TouchableOpacity, 
-  Image
+  Image,
+  RefreshControl
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { 
@@ -18,6 +19,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useSubscriptionStore } from '@/store/subscriptionStore';
 import { useStatsStore } from '@/store/statsStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
+import { useMealStore } from '@/store/mealStore';
 import CalorieGoalProgress from '@/components/CalorieGoalProgress';
 import SubscriptionBanner from '@/components/SubscriptionBanner';
 
@@ -29,19 +31,54 @@ export default function HomeScreen() {
     getSubscriptionTier 
   } = useSubscriptionStore();
   
-  const { todayCalories, fetchStats } = useStatsStore();
+  const { todayCalories, fetchStats, isLoading: statsLoading } = useStatsStore();
   const { preferences } = usePreferencesStore();
+  const { meals, fetchMeals, isLoading: mealsLoading } = useMealStore();
   
   const currentTier = getSubscriptionTier();
   const canTrial = isTrialAvailable();
   
-  // Fetch stats when component mounts
+  // Fetch stats and meals when component mounts
   useEffect(() => {
     fetchStats();
+    fetchMeals();
   }, []);
   
+  // Get today's meals
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const todayMeals = meals.filter(meal => {
+    const mealDate = new Date(meal.date);
+    mealDate.setHours(0, 0, 0, 0);
+    return mealDate.getTime() === today.getTime();
+  });
+  
+  // Sort by time (newest first)
+  const sortedTodayMeals = [...todayMeals].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+  
+  // Take only the most recent 2 meals
+  const recentMeals = sortedTodayMeals.slice(0, 2);
+  
+  const onRefresh = async () => {
+    await Promise.all([fetchStats(), fetchMeals()]);
+  };
+  
+  const isRefreshing = statsLoading || mealsLoading;
+  
   return (
-    <ScrollView style={[styles.container, { backgroundColor: Colors.background }]}>
+    <ScrollView 
+      style={[styles.container, { backgroundColor: Colors.background }]}
+      refreshControl={
+        <RefreshControl 
+          refreshing={isRefreshing} 
+          onRefresh={onRefresh}
+          colors={[Colors.primary]}
+          tintColor={Colors.primary}
+        />
+      }
+    >
       <View style={styles.header}>
         <View>
           <Text style={[styles.greeting, { color: Colors.text }]}>Good morning,</Text>
@@ -56,7 +93,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
       
-      {/* Calorie Progress - Now with proper props */}
+      {/* Calorie Progress */}
       <CalorieGoalProgress 
         current={todayCalories} 
         goal={preferences.dailyCalorieGoal} 
@@ -136,31 +173,48 @@ export default function HomeScreen() {
         </View>
         
         <View style={styles.mealsList}>
-          <TouchableOpacity style={[styles.mealCard, { backgroundColor: Colors.card }]}>
-            <View style={[styles.mealTypeTag, { backgroundColor: Colors.mealTypes.breakfast }]}>
-              <Text style={styles.mealTypeText}>Breakfast</Text>
-            </View>
-            <View style={styles.mealContent}>
-              <Text style={[styles.mealName, { color: Colors.text }]}>Oatmeal with Berries</Text>
-              <Text style={[styles.mealTime, { color: Colors.subtext }]}>8:30 AM</Text>
-              <Text style={[styles.mealCalories, { color: Colors.primary }]}>320 calories</Text>
-            </View>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={[styles.mealCard, { backgroundColor: Colors.card }]}>
-            <View style={[styles.mealTypeTag, { backgroundColor: Colors.mealTypes.lunch }]}>
-              <Text style={styles.mealTypeText}>Lunch</Text>
-            </View>
-            <View style={styles.mealContent}>
-              <Text style={[styles.mealName, { color: Colors.text }]}>Chicken Salad</Text>
-              <Text style={[styles.mealTime, { color: Colors.subtext }]}>12:45 PM</Text>
-              <Text style={[styles.mealCalories, { color: Colors.primary }]}>450 calories</Text>
-            </View>
-          </TouchableOpacity>
+          {recentMeals.length > 0 ? (
+            recentMeals.map((meal, index) => {
+              const mealTime = new Date(meal.date).toLocaleTimeString([], { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+              });
+              
+              const mealTypeColor = meal.mealType ? 
+                Colors.mealTypes[meal.mealType] : 
+                Colors.mealTypes.other;
+              
+              return (
+                <TouchableOpacity 
+                  key={meal.id || index}
+                  style={[styles.mealCard, { backgroundColor: Colors.card }]}
+                >
+                  <View style={[styles.mealTypeTag, { backgroundColor: mealTypeColor }]}>
+                    <Text style={styles.mealTypeText}>
+                      {meal.mealType ? meal.mealType.charAt(0).toUpperCase() + meal.mealType.slice(1) : 'Other'}
+                    </Text>
+                  </View>
+                  <View style={styles.mealContent}>
+                    <Text style={[styles.mealName, { color: Colors.text }]}>
+                      {meal.food || meal.name || 'Unnamed Meal'}
+                    </Text>
+                    <Text style={[styles.mealTime, { color: Colors.subtext }]}>{mealTime}</Text>
+                    <Text style={[styles.mealCalories, { color: Colors.primary }]}>
+                      {meal.calories || 0} calories
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })
+          ) : (
+            <Text style={[styles.emptyMealsText, { color: Colors.subtext }]}>
+              No meals logged today. Start tracking your food intake!
+            </Text>
+          )}
           
           <TouchableOpacity 
             style={[styles.addMealCard, { borderColor: Colors.border }]}
-            onPress={() => router.push('/scan-tab')}
+            onPress={() => router.push('/manual-entry')}
           >
             <Plus size={24} color={Colors.primary} />
             <Text style={[styles.addMealText, { color: Colors.primary }]}>Add Meal</Text>
@@ -332,6 +386,11 @@ const styles = StyleSheet.create({
   mealCalories: {
     fontSize: 14,
     fontWeight: '500',
+  },
+  emptyMealsText: {
+    textAlign: 'center',
+    marginVertical: 16,
+    fontSize: 14,
   },
   addMealCard: {
     borderRadius: 12,

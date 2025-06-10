@@ -2,12 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
 import { Calendar, Filter } from 'lucide-react-native';
 import { useMealStore } from '@/store/mealStore';
+import { useStatsStore } from '@/store/statsStore';
 import MealCard from '@/components/MealCard';
 import EmptyState from '@/components/EmptyState';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 export default function HistoryScreen() {
-  const { meals, fetchMeals, isLoading } = useMealStore();
+  const { meals, fetchMeals, isLoading: mealsLoading } = useMealStore();
+  const { fetchStats } = useStatsStore();
   const [refreshing, setRefreshing] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'scan' | 'manual'>('all');
   const Colors = useThemeColors();
@@ -18,7 +20,7 @@ export default function HistoryScreen() {
   
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchMeals();
+    await Promise.all([fetchMeals(), fetchStats()]);
     setRefreshing(false);
   };
   
@@ -78,6 +80,11 @@ export default function HistoryScreen() {
         <Text style={[styles.dateText, { color: Colors.text }]}>{displayDate}</Text>
       </View>
     );
+  };
+  
+  const handleDeleteMeal = async () => {
+    // After deleting a meal, refresh both meals and stats
+    await Promise.all([fetchMeals(), fetchStats()]);
   };
   
   return (
@@ -157,20 +164,20 @@ export default function HistoryScreen() {
                 <MealCard
                   key={meal.id}
                   id={meal.id || ''}
-                  food={meal.name}
+                  food={meal.food || meal.name || ''}
                   calories={meal.calories}
                   date={meal.date}
                   method={meal.method || 'manual'}
                   mealType={meal.mealType}
                   notes={meal.notes}
-                  onDelete={fetchMeals}
+                  onDelete={handleDeleteMeal}
                 />
               ))}
             </View>
           )}
           refreshControl={
             <RefreshControl 
-              refreshing={refreshing} 
+              refreshing={refreshing || mealsLoading} 
               onRefresh={onRefresh}
               tintColor={Colors.primary}
               colors={[Colors.primary]}

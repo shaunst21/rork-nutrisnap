@@ -9,6 +9,7 @@ import {
 } from '@/firebase';
 import { updateStreak } from '@/utils/streakHelpers';
 import { Meal } from '@/types';
+import { useStatsStore } from './statsStore';
 
 interface MealState {
   meals: Meal[];
@@ -31,6 +32,10 @@ export const useMealStore = create<MealState>()(
         try {
           const meals = await getMeals();
           set({ meals, isLoading: false });
+          
+          // Update stats after fetching meals
+          const statsStore = useStatsStore.getState();
+          statsStore.fetchStats();
         } catch (error) {
           console.error('Error fetching meals:', error);
           set({ error: 'Failed to fetch meals', isLoading: false });
@@ -45,10 +50,12 @@ export const useMealStore = create<MealState>()(
             date: new Date().toISOString(),
           };
           
+          let addedMeal;
+          
           // Check if online
           if (isOnline()) {
             // Add to Firebase
-            const addedMeal = await addMealToFirebase(newMeal);
+            addedMeal = await addMealToFirebase(newMeal);
             set(state => ({
               meals: [...state.meals, addedMeal],
               isLoading: false
@@ -59,6 +66,8 @@ export const useMealStore = create<MealState>()(
               ...newMeal,
               id: `offline_${Date.now()}`
             };
+            
+            addedMeal = offlineMeal;
             
             // Add to local state
             set(state => ({
@@ -75,9 +84,18 @@ export const useMealStore = create<MealState>()(
           
           // Update streak
           await updateStreak();
+          
+          // Update stats immediately after adding a meal
+          const statsStore = useStatsStore.getState();
+          
+          // Update today's calories
+          statsStore.updateStatsWithNewMeal(addedMeal);
+          
+          return addedMeal;
         } catch (error) {
           console.error('Error adding meal:', error);
           set({ error: 'Failed to add meal', isLoading: false });
+          throw error;
         }
       },
       

@@ -135,8 +135,9 @@ export const getMostCommonFoods = async (limit: number = 5): Promise<Array<{food
     const foodCounts: {[key: string]: number} = {};
     
     meals.forEach((meal: any) => {
-      if (meal.food) {
-        foodCounts[meal.food] = (foodCounts[meal.food] || 0) + 1;
+      const foodName = meal.food || meal.name;
+      if (foodName) {
+        foodCounts[foodName] = (foodCounts[foodName] || 0) + 1;
       }
     });
     

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { TrendingUp, Calendar, Award, Utensils, BarChart, Target } from 'lucide-react-native';
 import { useStatsStore } from '@/store/statsStore';
+import { useMealStore } from '@/store/mealStore';
 import { usePreferencesStore } from '@/store/preferencesStore';
 import StatCard from '@/components/StatCard';
 import WeeklyCalorieChart from '@/components/WeeklyCalorieChart';
@@ -20,21 +21,23 @@ export default function StatsScreen() {
     commonFoods,
     currentStreak,
     longestStreak,
-    isLoading,
+    isLoading: statsLoading,
     fetchStats,
   } = useStatsStore();
   
+  const { meals, fetchMeals, isLoading: mealsLoading } = useMealStore();
   const { preferences } = usePreferencesStore();
   
   const [refreshing, setRefreshing] = useState(false);
   
   useEffect(() => {
     fetchStats();
+    fetchMeals();
   }, []);
   
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchStats();
+    await Promise.all([fetchStats(), fetchMeals()]);
     setRefreshing(false);
   };
   
@@ -57,7 +60,12 @@ export default function StatsScreen() {
       style={[styles.container, { backgroundColor: Colors.background }]}
       contentContainerStyle={styles.contentContainer}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl 
+          refreshing={refreshing || statsLoading || mealsLoading} 
+          onRefresh={onRefresh}
+          colors={[Colors.primary]}
+          tintColor={Colors.primary}
+        />
       }
     >
       {/* Weekly Chart */}

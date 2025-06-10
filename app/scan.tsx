@@ -91,6 +91,7 @@ export default function ScanScreen() {
   ) => {
     try {
       await addMeal({
+        food: food,
         name: food,
         calories,
         method: 'scan',

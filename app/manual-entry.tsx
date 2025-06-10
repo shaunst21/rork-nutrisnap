@@ -8,7 +8,8 @@ import {
   KeyboardAvoidingView, 
   Platform,
   ScrollView,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Check, X } from 'lucide-react-native';
@@ -22,6 +23,9 @@ export default function ManualEntryScreen() {
   
   const [food, setFood] = useState('');
   const [calories, setCalories] = useState('');
+  const [protein, setProtein] = useState('');
+  const [carbs, setCarbs] = useState('');
+  const [fat, setFat] = useState('');
   const [notes, setNotes] = useState('');
   const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack'>('lunch');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -44,12 +48,21 @@ export default function ManualEntryScreen() {
     setIsSubmitting(true);
     
     try {
+      // Parse macros (optional)
+      const proteinNum = parseInt(protein, 10) || 0;
+      const carbsNum = parseInt(carbs, 10) || 0;
+      const fatNum = parseInt(fat, 10) || 0;
+      
       await addMeal({
         food: food.trim(),
+        name: food.trim(), // Add name field for consistency
         calories: caloriesNum,
         method: 'manual',
         mealType,
-        notes: notes.trim() || undefined
+        notes: notes.trim() || undefined,
+        protein: proteinNum,
+        carbs: carbsNum,
+        fat: fatNum
       });
       
       router.back();
@@ -114,6 +127,66 @@ export default function ManualEntryScreen() {
             keyboardType="number-pad"
           />
           
+          <Text style={[styles.sectionLabel, { color: Colors.text }]}>Macros (Optional)</Text>
+          <View style={styles.macrosContainer}>
+            <View style={styles.macroInput}>
+              <Text style={[styles.macroLabel, { color: Colors.subtext }]}>Protein (g)</Text>
+              <TextInput
+                style={[
+                  styles.input, 
+                  { 
+                    backgroundColor: Colors.card,
+                    borderColor: Colors.border,
+                    color: Colors.text
+                  }
+                ]}
+                value={protein}
+                onChangeText={setProtein}
+                placeholder="0"
+                placeholderTextColor={Colors.mediumGray}
+                keyboardType="number-pad"
+              />
+            </View>
+            
+            <View style={styles.macroInput}>
+              <Text style={[styles.macroLabel, { color: Colors.subtext }]}>Carbs (g)</Text>
+              <TextInput
+                style={[
+                  styles.input, 
+                  { 
+                    backgroundColor: Colors.card,
+                    borderColor: Colors.border,
+                    color: Colors.text
+                  }
+                ]}
+                value={carbs}
+                onChangeText={setCarbs}
+                placeholder="0"
+                placeholderTextColor={Colors.mediumGray}
+                keyboardType="number-pad"
+              />
+            </View>
+            
+            <View style={styles.macroInput}>
+              <Text style={[styles.macroLabel, { color: Colors.subtext }]}>Fat (g)</Text>
+              <TextInput
+                style={[
+                  styles.input, 
+                  { 
+                    backgroundColor: Colors.card,
+                    borderColor: Colors.border,
+                    color: Colors.text
+                  }
+                ]}
+                value={fat}
+                onChangeText={setFat}
+                placeholder="0"
+                placeholderTextColor={Colors.mediumGray}
+                keyboardType="number-pad"
+              />
+            </View>
+          </View>
+          
           <MealTypeSelector 
             selectedType={mealType}
             onSelect={setMealType}
@@ -142,13 +215,19 @@ export default function ManualEntryScreen() {
             style={[
               styles.submitButton, 
               { backgroundColor: Colors.primary },
-              (!food.trim() || !calories) && styles.disabledButton
+              (isSubmitting || !food.trim() || !calories) && styles.disabledButton
             ]}
             onPress={handleSubmit}
             disabled={isSubmitting || !food.trim() || !calories}
           >
-            <Check size={20} color="#FFFFFF" />
-            <Text style={styles.submitButtonText}>Save Food</Text>
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <>
+                <Check size={20} color="#FFFFFF" />
+                <Text style={styles.submitButtonText}>Save Food</Text>
+              </>
+            )}
           </TouchableOpacity>
         </View>
         
@@ -197,12 +276,31 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginBottom: 8,
   },
+  sectionLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    marginTop: 8,
+    marginBottom: 8,
+  },
   input: {
     borderRadius: 8,
     borderWidth: 1,
     padding: 12,
     fontSize: 16,
     marginBottom: 16,
+  },
+  macrosContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  macroInput: {
+    flex: 1,
+    marginRight: 8,
+  },
+  macroLabel: {
+    fontSize: 14,
+    marginBottom: 4,
   },
   notesInput: {
     minHeight: 80,
