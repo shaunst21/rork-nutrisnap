@@ -6,12 +6,12 @@ import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, q
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "your_api_key_here",
-  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "your_project.firebaseapp.com",
-  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "your_project_id",
-  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "your_project.appspot.com",
-  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "your_sender_id",
-  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "your_app_id"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "AIzaSyAk4rzM_FaTE6HzmjLQIDttga0PTkn6LRM",
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "calorielens-e05c7.firebaseapp.com",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "calorielens-e05c7",
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "calorielens-e05c7.firebasestorage.app",
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "130019186099",
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "1:130019186099:web:31d7c31061e8271b8d27c6"
 };
 
 // Initialize Firebase
@@ -136,9 +136,9 @@ class MockFirestore {
   }
 }
 
-// Create Firebase instance (fallback to mock if not configured)
-const firestore = firebaseConfig.apiKey !== "your_api_key_here" ? null : new MockFirestore();
-const useMockFirestore = firestore !== null;
+// Create Firebase instance (use real Firebase with provided credentials)
+const firestore = null; // We'll use real Firebase now
+const useMockFirestore = false;
 
 // Helper functions for common operations
 export const getMeals = async (): Promise<Meal[]> => {

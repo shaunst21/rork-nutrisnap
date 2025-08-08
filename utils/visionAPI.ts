@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
 // Google Vision API configuration
-const GOOGLE_VISION_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY || 'your_google_vision_api_key_here';
+const GOOGLE_VISION_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY || 'AIzaSyCm-03XTNJAfqqi6O4G2t7itdUecSn4tnY';
 const VISION_API_URL = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_VISION_API_KEY}`;
 
 interface VisionAPIResponse {
@@ -28,7 +28,7 @@ interface FoodAnalysisResult {
 // Analyze image for food content using Google Vision API
 export const analyzeImageForFood = async (imageBase64: string): Promise<FoodAnalysisResult> => {
   try {
-    if (GOOGLE_VISION_API_KEY === 'your_google_vision_api_key_here') {
+    if (GOOGLE_VISION_API_KEY === 'your_google_vision_api_key_here' || !GOOGLE_VISION_API_KEY) {
       // Fallback mock response for development
       console.log('Using mock Vision API response - configure your API key');
       return {
