@@ -1,10 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { Meal, StreakData } from '@/types';
+import { Meal } from '@/types';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy } from 'firebase/firestore';
 
-// Mock Firebase implementation since we can't actually connect to Firebase
-// In a real app, this would be replaced with actual Firebase initialization
+// Firebase configuration
+const firebaseConfig = {
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || "your_api_key_here",
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN || "your_project.firebaseapp.com",
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID || "your_project_id",
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET || "your_project.appspot.com",
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "your_sender_id",
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID || "your_app_id"
+};
 
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Fallback to mock implementation if Firebase is not configured
 class MockFirestore {
   async getCollection(path: string) {
     try {
@@ -122,24 +136,75 @@ class MockFirestore {
   }
 }
 
-// Create mock Firebase instance
-const firestore = new MockFirestore();
+// Create Firebase instance (fallback to mock if not configured)
+const firestore = firebaseConfig.apiKey !== "your_api_key_here" ? null : new MockFirestore();
+const useMockFirestore = firestore !== null;
 
 // Helper functions for common operations
 export const getMeals = async (): Promise<Meal[]> => {
-  return await firestore.getCollection('users/CalorieLens/meals');
+  if (useMockFirestore) {
+    return await firestore!.getCollection('users/CalorieLens/meals');
+  }
+  
+  try {
+    const mealsRef = collection(db, 'meals');
+    const snapshot = await getDocs(query(mealsRef, orderBy('date', 'desc')));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Meal));
+  } catch (error) {
+    console.error('Error getting meals from Firebase:', error);
+    return [];
+  }
 };
 
 export const addMeal = async (mealData: Omit<Meal, 'id'>): Promise<Meal> => {
-  return await firestore.addDocument('users/CalorieLens/meals', mealData);
+  if (useMockFirestore) {
+    return await firestore!.addDocument('users/CalorieLens/meals', mealData);
+  }
+  
+  try {
+    const mealsRef = collection(db, 'meals');
+    const docRef = await addDoc(mealsRef, {
+      ...mealData,
+      createdAt: new Date().toISOString()
+    });
+    return { id: docRef.id, ...mealData } as Meal;
+  } catch (error) {
+    console.error('Error adding meal to Firebase:', error);
+    throw error;
+  }
 };
 
 export const updateMeal = async (id: string, mealData: Partial<Meal>): Promise<Meal> => {
-  return await firestore.updateDocument('users/CalorieLens/meals', id, mealData);
+  if (useMockFirestore) {
+    return await firestore!.updateDocument('users/CalorieLens/meals', id, mealData);
+  }
+  
+  try {
+    const mealRef = doc(db, 'meals', id);
+    await updateDoc(mealRef, {
+      ...mealData,
+      updatedAt: new Date().toISOString()
+    });
+    return { id, ...mealData } as Meal;
+  } catch (error) {
+    console.error('Error updating meal in Firebase:', error);
+    throw error;
+  }
 };
 
 export const deleteMeal = async (id: string): Promise<boolean> => {
-  return await firestore.deleteDocument('users/CalorieLens/meals', id);
+  if (useMockFirestore) {
+    return await firestore!.deleteDocument('users/CalorieLens/meals', id);
+  }
+  
+  try {
+    const mealRef = doc(db, 'meals', id);
+    await deleteDoc(mealRef);
+    return true;
+  } catch (error) {
+    console.error('Error deleting meal from Firebase:', error);
+    return false;
+  }
 };
 
 export const getMealsForDate = async (date: string): Promise<Meal[]> => {
@@ -150,13 +215,30 @@ export const getMealsForDate = async (date: string): Promise<Meal[]> => {
   const endDate = new Date(date);
   endDate.setHours(23, 59, 59, 999);
   
-  return await firestore.query('users/CalorieLens/meals', [
-    { field: 'date', operator: '>=', value: startDate.toISOString() },
-    { field: 'date', operator: '<=', value: endDate.toISOString() }
-  ]);
+  if (useMockFirestore) {
+    return await firestore!.query('users/CalorieLens/meals', [
+      { field: 'date', operator: '>=', value: startDate.toISOString() },
+      { field: 'date', operator: '<=', value: endDate.toISOString() }
+    ]);
+  }
+  
+  try {
+    const mealsRef = collection(db, 'meals');
+    const q = query(
+      mealsRef,
+      where('date', '>=', startDate.toISOString()),
+      where('date', '<=', endDate.toISOString()),
+      orderBy('date', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Meal));
+  } catch (error) {
+    console.error('Error getting meals for date from Firebase:', error);
+    return [];
+  }
 };
 
-export const getStreakData = async (): Promise<StreakData> => {
+export const getStreakData = async () => {
   try {
     const data = await AsyncStorage.getItem('streak-data');
     return data ? JSON.parse(data) : {
@@ -174,7 +256,7 @@ export const getStreakData = async (): Promise<StreakData> => {
   }
 };
 
-export const updateStreakData = async (streakData: StreakData): Promise<StreakData> => {
+export const updateStreakData = async (streakData: any) => {
   try {
     await AsyncStorage.setItem('streak-data', JSON.stringify(streakData));
     return streakData;

@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 
-// Google Vision API key
-const GOOGLE_VISION_API_KEY = 'AIzaSyCm-03XTNJAfqqi6O4G2t7itdUecSn4tnY';
+// Google Vision API configuration
+const GOOGLE_VISION_API_KEY = process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY || 'AIzaSyCm-03XTNJAfqqi6O4G2t7itdUecSn4tnY';
 const GOOGLE_VISION_API_URL = 'https://vision.googleapis.com/v1/images:annotate';
 
 // Nutritional database for common foods

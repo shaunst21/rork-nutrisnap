@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
+    "@google-cloud/vision": "^5.3.3",
     "@hono/trpc-server": "^0.3.4",
     "@react-native-async-storage/async-storage": "2.1.2",
     "@react-navigation/native": "^7.1.6",
@@ -33,6 +34,7 @@
     "expo-symbols": "~0.4.4",
     "expo-system-ui": "~5.0.6",
     "expo-web-browser": "~14.1.6",
+    "firebase": "^12.1.0",
     "hono": "^4.7.11",
     "lucide-react-native": "^0.475.0",
     "nativewind": "^4.1.23",
